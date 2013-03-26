@@ -1,6 +1,6 @@
 # A Kingdom Divided
 
-![Screenshot](https://raw.github.com/clofresh/kingdom/master/screenshot.png)
+![Screenshot](https://raw.github.com/clofresh/kingdom/master/screenshot.png?login=clofresh&token=337ee77b2fae48ed08192f89e45d1955)
 
 ## Dependencies
 
