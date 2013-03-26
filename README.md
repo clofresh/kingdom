@@ -1,5 +1,7 @@
 # A Kingdom Divided
 
+![Screenshot](https://raw.github.com/clofresh/kingdom/master/screenshot.png)
+
 ## Dependencies
 
 In order to run the game, you'll need [Lua Löve 0.8.0](https://love2d.org/). If working from a git checkout, you'll need to get the git submodules:
