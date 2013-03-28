@@ -1,3 +1,6 @@
 [submodule "lib/Advanced-Tiled-Loader"]
 	path = lib/Advanced-Tiled-Loader
 	url = git://github.com/Kadoba/Advanced-Tiled-Loader.git
+[submodule "lib/hump"]
+	path = lib/hump
+	url = git://github.com/vrld/hump.git
