@@ -21,12 +21,12 @@ function updatePlayer(dt)
 
     if love.keyboard.isDown("a") then
         commander.pos.x = commander.pos.x - 1
-        commander.sx = 1
+        commander.sx = 1/8
         commander.ox = 0
     elseif love.keyboard.isDown("d") then
         commander.pos.x = commander.pos.x + 1
-        commander.sx = -1
-        commander.ox = 32
+        commander.sx = -1/8
+        commander.ox = 256
     end
 end
 
@@ -39,14 +39,14 @@ function love.load()
     map = ATL.load("kingdom.tmx")
     commander.image = love.graphics.newImage("units/commander.png")
     commander.pos = vector(453, 257)
-    commander.sx = 1
-    commander.sy = 1
+    commander.sx = 1/8
+    commander.sy = 1/8
     commander.ox = 0
     commander.oy = 0
     enemy.image = commander.image
     enemy.pos = vector(162, 162)
-    enemy.sx = -1
-    enemy.sy = 1
+    enemy.sx = -1/8
+    enemy.sy = 1/8
     enemy.ox = 32
     enemy.oy = 0
     enemy.speed = 20
