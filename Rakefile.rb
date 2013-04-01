@@ -8,10 +8,12 @@ end
 
 directory "build"
 
+desc 'Initialize and update the submodule dependencies'
 task :submodules do
     sh "git submodule update --init"
 end
 
+desc 'Compile a .love file'
 task :compile => [:submodules, "build"] do
     sh <<-EOS
         OUTPUT=#{lovefile}
@@ -20,6 +22,7 @@ task :compile => [:submodules, "build"] do
     EOS
 end
 
+desc 'Compile and publish a .love file to the CDN'
 task :publish => [:compile] do
     require 'cloudfiles'
     require 'creds'
@@ -33,6 +36,7 @@ task :publish => [:compile] do
     puts object.public_url
 end
 
+desc 'Clean out the build directory'
 task :clean do
     sh "rm -rf build/*"
 end
