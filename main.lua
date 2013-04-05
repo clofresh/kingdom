@@ -8,114 +8,130 @@ dialogue = require("src/dialogue")
 sprite = require("src/sprite")
 
 local map
-local commander = {}
-local enemy = {}
 local eventStack
 
-local overworld = {
-    name = 'overworld',
-    load = function(self)
-        map = ATL.load("kingdom.tmx")
-        commander.image = love.graphics.newImage("units/commander.png")
-        commander.pos = vector(453, 257)
-        commander.sx = 1/8
-        commander.sy = 1/8
-        commander.ox = 0
-        commander.oy = 0
-        enemy.image = commander.image
-        enemy.pos = vector(162, 162)
-        enemy.sx = -1/8
-        enemy.sy = 1/8
-        enemy.ox = 256
-        enemy.oy = 0
-        enemy.speed = 20
-        enemy.spoke = false
-        enemy.onCollision = {
-            name = 'greetings',
-            load = function(self)
-                local script = [[Commander: Ahoy there!
+local battle = Event("battle")
+battle.load = function(self)
+    self.timer = 10
+end
+
+battle.update = function(self, dt)
+    self.timer = self.timer - dt
+    if self.timer <= 0 then
+        eventStack:pop()
+    end
+end
+
+local greetings = Event("greetings")
+
+greetings.load = function(self)
+    local script = [[Commander: Ahoy there!
 Enemy: Sup!
 Commander: Not much.
 Enemy: Aiight.
 ]]
-                self.script = dialogue.lineIterator(script)
-                self.currentLine = self.script()
-                self.right = commander
-                self.left = enemy
+    self.script = dialogue.lineIterator(script)
+    self.currentLine = self.script()
 
-                love.keyreleased = function(key)
-                    if key == "return" then
-                        self.currentLine = self.script()
-                        if not self.currentLine then
-                            eventStack:pop()
-                        end
-                    end
-                end
-
-            end,
-            unload = function(self)
-                love.keyreleased = nil
-            end,
-            update = function(self, dt)
-            end,
-            draw = function(self)
-                dialogue.draw(self.left, self.right, self.currentLine)
+    love.keyreleased = function(key)
+        if key == "return" then
+            self.currentLine = self.script()
+            if not self.currentLine then
+                eventStack:pop()
+                eventStack:push(battle)
             end
-        }
-
-    end,
-    unload = function(self)
-    end,
-    update = function(self, dt)
-        updatePlayer(dt)
-        updateEnemy(dt)
-        sprite.checkCollisions(dt, function(sprites)
-            for i, sprite in pairs(sprites) do
-                if sprite.onCollision then
-                    eventStack:push(sprite.onCollision)
-                    sprite.onCollision = nil
-                end
-            end
-        end)
-    end,
-    draw = function(self)
-        map:draw()
-        sprite.draw(commander)
-        sprite.draw(enemy)
-
-        love.graphics.print(string.format(
-    [[Memory: %dKB
-Pos: (%f, %f)
-]],
-        math.floor(collectgarbage("count")),
-        commander.pos.x,
-        commander.pos.y), 1, 1)
+        end
     end
-}
 
-function updatePlayer(dt)
+end
+
+greetings.unload = function(self)
+    love.keyreleased = nil
+end
+
+greetings.draw = function (self)
+    dialogue.draw(self.left, self.right, self.currentLine)
+end
+
+local overworld = Event("overworld")
+overworld.load = function(self)
+    self.map = ATL.load("kingdom.tmx")
+
+    local commander = {
+        image = love.graphics.newImage("units/commander.png"),
+        pos = vector(453, 257),
+        sx = 1/8,
+        sy = 1/8,
+        ox = 0,
+        oy = 0,
+    }
+    local enemy = {
+        image = commander.image,
+        pos = vector(162, 162),
+        sx = -1/8,
+        sy = 1/8,
+        ox = 256,
+        oy = 0,
+        speed = 20,
+    }
+    greetings.right = commander
+    greetings.left = enemy
+    enemy.onCollision = greetings 
+    self.commander = commander
+    self.enemy = enemy
+end
+
+overworld.update = function(self, dt)
+    self:updatePlayer(dt)
+    self:updateEnemy(dt)
+    sprite.checkCollisions(dt, function(sprites)
+        for i, sprite in pairs(sprites) do
+            if sprite.onCollision then
+                eventStack:push(sprite.onCollision)
+                sprite.onCollision = nil
+            end
+        end
+    end)
+end
+
+overworld.updatePlayer = function(self, dt)
     if love.keyboard.isDown("w") then
-        commander.pos.y = commander.pos.y - 1
+        self.commander.pos.y = self.commander.pos.y - 1
     elseif love.keyboard.isDown("s") then
-        commander.pos.y = commander.pos.y + 1
+        self.commander.pos.y = self.commander.pos.y + 1
     end
 
     if love.keyboard.isDown("a") then
-        commander.pos.x = commander.pos.x - 1
-        commander.sx = 1/8
-        commander.ox = 0
+        self.commander.pos.x = self.commander.pos.x - 1
+        self.commander.sx = 1/8
+        self.commander.ox = 0
     elseif love.keyboard.isDown("d") then
-        commander.pos.x = commander.pos.x + 1
-        commander.sx = -1/8
-        commander.ox = 256
+        self.commander.pos.x = self.commander.pos.x + 1
+        self.commander.sx = -1/8
+        self.commander.ox = 256
     end
-    sprite.registerPosition(commander)
+    sprite.registerPosition(self.commander)
 end
 
-function updateEnemy(dt)
+overworld.updateEnemy = function(self, dt)
     -- Move towards the player
-    enemy.pos = enemy.pos + ((commander.pos - enemy.pos):normalized() * dt * enemy.speed)
-    sprite.registerPosition(enemy)
+    local dir = (self.commander.pos - self.enemy.pos):normalized()
+    self.enemy.pos = self.enemy.pos + (dir * dt * self.enemy.speed)
+    sprite.registerPosition(self.enemy)
+end
+
+overworld.draw = function(self)
+    self.map:draw()
+    sprite.draw(self.commander)
+    sprite.draw(self.enemy)
+
+    love.graphics.print(string.format(
+[[Memory: %dKB
+Pos: (%f, %f)
+]],
+    math.floor(collectgarbage("count")),
+    self.commander.pos.x,
+    self.commander.pos.y), 1, 1)
 end
 
 function love.load()

@@ -24,6 +24,23 @@ function EventStack:peek(val)
     return self.events[#self.events]
 end
 
+Event = Class{function(self, name)
+    self.name = name
+end}
+
+function Event:load()
+end
+
+function Event:unload()
+end
+
+function Event:update(dt)
+end
+
+function Event:draw()
+end
+
 return {
-    EventStack = EventStack
+    EventStack = EventStack,
+    Event = Event,
 }
