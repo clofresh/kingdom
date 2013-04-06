@@ -3,14 +3,14 @@ Class = require "lib/hump/class"
 vector = require "lib/hump/vector"
 ATL.path = "maps/"
 
-EventStack = require("src/event").EventStack
+ContextStack = require("src/context").ContextStack
 dialogue = require("src/dialogue")
 sprite = require("src/sprite")
 
 local map
-local eventStack
+local contextStack
 
-local battle = Event("battle")
+local battle = Context("battle")
 battle.load = function(self)
     self.timer = 10
 end
@@ -18,11 +18,11 @@ end
 battle.update = function(self, dt)
     self.timer = self.timer - dt
     if self.timer <= 0 then
-        eventStack:pop()
+        contextStack:pop()
     end
 end
 
-local greetings = Event("greetings")
+local greetings = Context("greetings")
 
 greetings.load = function(self)
     local script = [[Commander: Ahoy there!
@@ -37,8 +37,8 @@ Enemy: Aiight.
         if key == "return" then
             self.currentLine = self.script()
             if not self.currentLine then
-                eventStack:pop()
-                eventStack:push(battle)
+                contextStack:pop()
+                contextStack:push(battle)
             end
         end
     end
@@ -53,7 +53,7 @@ greetings.draw = function (self)
     dialogue.draw(self.left, self.right, self.currentLine)
 end
 
-local overworld = Event("overworld")
+local overworld = Context("overworld")
 overworld.load = function(self)
     self.map = ATL.load("kingdom.tmx")
 
@@ -87,7 +87,7 @@ overworld.update = function(self, dt)
     sprite.checkCollisions(dt, function(sprites)
         for i, sprite in pairs(sprites) do
             if sprite.onCollision then
-                eventStack:push(sprite.onCollision)
+                contextStack:push(sprite.onCollision)
                 sprite.onCollision = nil
             end
         end
@@ -135,19 +135,19 @@ Pos: (%f, %f)
 end
 
 function love.load()
-    eventStack = EventStack({overworld})
+    contextStack = ContextStack({overworld})
 end
 
 function love.update(dt)
-    local currentEvent = eventStack:peek()
-    if currentEvent then
-        currentEvent:update(dt)
+    local currentContext = contextStack:peek()
+    if currentContext then
+        currentContext:update(dt)
     end
 end
 
 function love.draw()
-    for i, event in pairs(eventStack.events) do
-        event:draw()
+    for i, context in pairs(contextStack.contexts) do
+        context:draw()
     end
 end
 
