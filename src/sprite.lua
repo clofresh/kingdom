@@ -1,4 +1,4 @@
-SpatialIndex = Class{function(self, xMod, yMod)
+local SpatialIndex = Class{function(self, xMod, yMod)
     self.xMod = xMod
     self.yMod = yMod
     self._positions = {}

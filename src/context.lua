@@ -1,4 +1,4 @@
-ContextStack = Class{function(self, contexts)
+local ContextStack = Class{function(self, contexts)
     self.contexts = {}
     for i, context in pairs(contexts) do
         self:push(context)
@@ -39,7 +39,7 @@ function ContextStack:peek()
     return self.contexts[#self.contexts]
 end
 
-Context = Class{function(self, name)
+local Context = Class{function(self, name)
     self.name = name
 end}
 
