@@ -1,6 +1,7 @@
 local battle = context.Context("battle")
 battle.isFullScreen = true
 battle.load = function(self)
+    audio.play(audio.songs.theme2)
     self.index = sprite.SpatialIndex(32, 32)
     self.playerArmy = {
         {

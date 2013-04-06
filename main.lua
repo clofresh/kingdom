@@ -7,13 +7,17 @@ context = require("src/context")
 dialogue = require("src/dialogue")
 sprite = require("src/sprite")
 battle = require("src/battle")
+audio = require("src/audio")
 
 contextStack = nil
+currentSong = nil
 images = {}
 
 local greetings = context.Context("greetings")
 
 greetings.load = function(self)
+    audio.stop()
+
     local script = [[Commander: Ahoy there!
 Enemy: Sup!
 Commander: Not much.
@@ -44,6 +48,8 @@ end
 local overworld = context.Context("overworld")
 overworld.isFullScreen = true
 overworld.load = function(self)
+    self.song = audio.songs.theme1
+    audio.play(self.song)
     self.map = ATL.load("kingdom.tmx")
     self.index = sprite.SpatialIndex(32, 32)
 
@@ -72,6 +78,7 @@ overworld.load = function(self)
 end
 
 overworld.reenter = function(self, exitingContext)
+    audio.play(self.song)
     if exitingContext.name == 'battle' then
         if exitingContext.winner == 'player' then
             self.enemy = nil
@@ -150,6 +157,7 @@ end
 
 function love.load()
     images.commander = love.graphics.newImage("units/commander.png")
+    audio.load()
     contextStack = context.ContextStack({overworld})
 end
 
