@@ -128,7 +128,8 @@ overworld.updateEnemy = function(self, dt)
 end
 
 overworld.draw = function(self)
-    local xPos, yPos
+    local xPos = -1
+    local yPos = -1
     self.map:draw()
     if self.commander then
         sprite.draw(self.commander)
