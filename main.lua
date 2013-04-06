@@ -9,16 +9,132 @@ sprite = require("src/sprite")
 
 local map
 local contextStack
+local images = {}
 
 local battle = Context("battle")
+battle.isFullScreen = true
 battle.load = function(self)
-    self.timer = 10
+    self.index = sprite.SpatialIndex(32, 32)
+    self.playerArmy = {
+        {
+            name = "Alistair",
+            image = images.commander,
+            pos = vector(400, 10),
+            sx = 1/4,
+            sy = 1/4,
+            speed = 20,
+            health = 10,
+        },
+        {
+            name = "Lans",
+            image = images.commander,
+            pos = vector(400, 110),
+            sx = 1/4,
+            sy = 1/4,
+            speed = 20,
+            health = 10,
+        },
+        {
+            name = "Gareth",
+            image = images.commander,
+            pos = vector(400, 210),
+            sx = 1/4,
+            sy = 1/4,
+            speed = 20,
+            health = 10,
+        }
+    }
+    self.enemyArmy = {
+        {
+            name = "Laranjinha",
+            image = images.commander,
+            pos = vector(200, 10),
+            sx = -1/4,
+            sy = 1/4,
+            speed = 20,
+            health = 10,
+        },
+        {
+            name = "Acerola",
+            image = images.commander,
+            pos = vector(200, 110),
+            sx = -1/4,
+            sy = 1/4,
+            speed = 20,
+            health = 10,
+        }
+    }
+    self.winner = ''
+end
+
+battle.unload = function(self)
+    print(self.winner .. " won the battle")
 end
 
 battle.update = function(self, dt)
-    self.timer = self.timer - dt
-    if self.timer <= 0 then
+    for i, unit in pairs(self.enemyArmy) do
+        local target = nil
+        local targetDistance = nil
+        for i, foe in pairs(self.playerArmy) do
+            if target == nil then
+                target = foe
+                targetDistance = (foe.pos - unit.pos):len()
+            else
+                local newTargetDistance = (foe.pos - unit.pos):len()
+                if newTargetDistance < targetDistance then
+                    target = foe
+                    targetDistance = newTargetDistance
+                end
+            end
+        end
+        if target then
+            local move = (target.pos - unit.pos):normalize_inplace() 
+                           * (unit.speed * dt)
+            unit.pos = unit.pos + move
+        end
+        self.index:registerPos(unit)
+    end
+    for i, unit in pairs(self.playerArmy) do
+        self.index:registerPos(unit)
+    end
+    self.index:checkCollisions(dt, function(dt, sprites)
+        for i, sprt0 in pairs(sprites) do
+            for i, sprt1 in pairs(sprites) do
+                if sprt0 ~= sprt1 and math.random() > 0.5 then
+                    print(sprt0.name .. " hits " .. sprt1.name)
+                    sprt1.health = sprt1.health - 1
+                end
+            end
+        end
+    end)
+    self.index:clear()
+    for i, unit in pairs(self.playerArmy) do
+        if unit.health <= 0 then
+            self.playerArmy[i] = nil
+        end
+    end
+    for i, unit in pairs(self.enemyArmy) do
+        if unit.health <= 0 then
+            self.enemyArmy[i] = nil
+        end
+    end
+    if #self.playerArmy == 0 then
+        self.winner = 'enemy'
         contextStack:pop()
+    elseif #self.enemyArmy == 0 then
+        self.winner = 'player'
+        contextStack:pop()
+    end
+end
+
+battle.draw = function(self)
+    love.graphics.setColor(255, 255, 255)
+    love.graphics.rectangle("fill", 0, 0, 640, 480)
+    for i, player in pairs(self.playerArmy) do
+        sprite.draw(player)
+    end
+    for i, enemy in pairs(self.enemyArmy) do
+        sprite.draw(enemy)
     end
 end
 
@@ -37,8 +153,7 @@ Enemy: Aiight.
         if key == "return" then
             self.currentLine = self.script()
             if not self.currentLine then
-                contextStack:pop()
-                contextStack:push(battle)
+                contextStack:replace(battle)
             end
         end
     end
@@ -54,11 +169,13 @@ greetings.draw = function (self)
 end
 
 local overworld = Context("overworld")
+overworld.isFullScreen = true
 overworld.load = function(self)
     self.map = ATL.load("kingdom.tmx")
+    self.index = sprite.SpatialIndex(32, 32)
 
     local commander = {
-        image = love.graphics.newImage("units/commander.png"),
+        image = images.commander,
         pos = vector(453, 257),
         sx = 1/8,
         sy = 1/8,
@@ -66,7 +183,7 @@ overworld.load = function(self)
         oy = 0,
     }
     local enemy = {
-        image = commander.image,
+        image = images.commander,
         pos = vector(162, 162),
         sx = -1/8,
         sy = 1/8,
@@ -81,60 +198,84 @@ overworld.load = function(self)
     self.enemy = enemy
 end
 
+overworld.reenter = function(self, exitingContext)
+    if exitingContext.name == 'battle' then
+        if exitingContext.winner == 'player' then
+            self.enemy = nil
+        elseif exitingContext.winner == 'enemy' then
+            self.commander = nil
+        end
+    end
+end
+
 overworld.update = function(self, dt)
     self:updatePlayer(dt)
     self:updateEnemy(dt)
-    sprite.checkCollisions(dt, function(sprites)
-        for i, sprite in pairs(sprites) do
-            if sprite.onCollision then
-                contextStack:push(sprite.onCollision)
-                sprite.onCollision = nil
+    self.index:checkCollisions(dt, function(dt, sprites)
+        for i, sprt in pairs(sprites) do
+            if sprt.onCollision then
+                contextStack:push(sprt.onCollision)
+                sprt.onCollision = nil
             end
         end
     end)
+    self.index:clear()
 end
 
 overworld.updatePlayer = function(self, dt)
-    if love.keyboard.isDown("w") then
-        self.commander.pos.y = self.commander.pos.y - 1
-    elseif love.keyboard.isDown("s") then
-        self.commander.pos.y = self.commander.pos.y + 1
-    end
+    if self.commander then
+        if love.keyboard.isDown("w") then
+            self.commander.pos.y = self.commander.pos.y - 1
+        elseif love.keyboard.isDown("s") then
+            self.commander.pos.y = self.commander.pos.y + 1
+        end
 
-    if love.keyboard.isDown("a") then
-        self.commander.pos.x = self.commander.pos.x - 1
-        self.commander.sx = 1/8
-        self.commander.ox = 0
-    elseif love.keyboard.isDown("d") then
-        self.commander.pos.x = self.commander.pos.x + 1
-        self.commander.sx = -1/8
-        self.commander.ox = 256
+        if love.keyboard.isDown("a") then
+            self.commander.pos.x = self.commander.pos.x - 1
+            self.commander.sx = 1/8
+            self.commander.ox = 0
+        elseif love.keyboard.isDown("d") then
+            self.commander.pos.x = self.commander.pos.x + 1
+            self.commander.sx = -1/8
+            self.commander.ox = 256
+        end
+        self.index:registerPos(self.commander)
     end
-    sprite.registerPosition(self.commander)
 end
 
 overworld.updateEnemy = function(self, dt)
-    -- Move towards the player
-    local dir = (self.commander.pos - self.enemy.pos):normalized()
-    self.enemy.pos = self.enemy.pos + (dir * dt * self.enemy.speed)
-    sprite.registerPosition(self.enemy)
+    if self.enemy then
+        -- Move towards the player
+        if self.commander then
+            local dir = (self.commander.pos - self.enemy.pos):normalized()
+            self.enemy.pos = self.enemy.pos + (dir * dt * self.enemy.speed)
+        end
+        self.index:registerPos(self.enemy)
+    end
 end
 
 overworld.draw = function(self)
+    local xPos, yPos
     self.map:draw()
-    sprite.draw(self.commander)
-    sprite.draw(self.enemy)
+    if self.commander then
+        sprite.draw(self.commander)
+        xPos = self.commander.pos.x
+        yPos = self.commander.pos.y
+    end
+    if self.enemy then
+        sprite.draw(self.enemy)
+    end
 
     love.graphics.print(string.format(
 [[Memory: %dKB
 Pos: (%f, %f)
 ]],
     math.floor(collectgarbage("count")),
-    self.commander.pos.x,
-    self.commander.pos.y), 1, 1)
+    xPos, yPos), 1, 1)
 end
 
 function love.load()
+    images.commander = love.graphics.newImage("units/commander.png")
     contextStack = ContextStack({overworld})
 end
 
@@ -146,8 +287,13 @@ function love.update(dt)
 end
 
 function love.draw()
-    for i, context in pairs(contextStack.contexts) do
-        context:draw()
+    local top = contextStack:peek()
+    if top.isFullScreen then
+        top:draw()
+    else
+        for i, context in pairs(contextStack.contexts) do
+            context:draw()
+        end
     end
 end
 

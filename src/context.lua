@@ -11,7 +11,11 @@ function ContextStack:pop()
         print("Exiting " .. context.name)
         context:unload()
     end
-    return context
+    if #self.contexts == 0 then
+        love.event.quit()
+    else
+        self:peek():reenter(context)
+    end
 end
 
 function ContextStack:push(context)
@@ -20,7 +24,18 @@ function ContextStack:push(context)
     table.insert(self.contexts, context)
 end
 
-function ContextStack:peek(val)
+function ContextStack:replace(newContext)
+    local context = table.remove(self.contexts)
+    if context then
+        print("Exiting " .. context.name)
+        context:unload()
+    end
+    print("Entering " .. newContext.name)
+    newContext:load()
+    table.insert(self.contexts, newContext)
+end
+
+function ContextStack:peek()
     return self.contexts[#self.contexts]
 end
 
@@ -32,6 +47,9 @@ function Context:load()
 end
 
 function Context:unload()
+end
+
+function Context:reenter(exitingContext)
 end
 
 function Context:update(dt)
