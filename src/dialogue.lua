@@ -25,13 +25,13 @@ function lineIterator(text)
 end
 
 local Dialogue = Class{__includes=context.Context,
-    init = function(self, name, script, left, right, onFinished)
+    init = function(self, name, script, left, right, nextContext)
         context.Context.init(self, name)
         self.scriptText = script
         self.script = lineIterator(script)
         self.left = left
         self.right = right
-        self.onFinished = onFinished
+        self.nextContext = nextContext
     end
 }
 
@@ -43,7 +43,11 @@ function Dialogue:load()
         if key == "return" then
             self.currentLine = self.script()
             if not self.currentLine then
-                self.onFinished()
+                if self.nextContext then
+                    context.replace(self.nextContext)
+                else
+                    context.pop()
+                end
             end
         end
     end

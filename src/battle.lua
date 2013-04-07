@@ -1,69 +1,63 @@
-local battle = context.Context("battle")
-battle.isFullScreen = true
-battle.load = function(self)
+local battleCount = 0
+local Battle = Class{__includes=context.Context,
+    init = function(self, leftArmy, rightArmy, name)
+        battleCount = battleCount + 1
+        if name then
+            context.Context.init(self, name)
+        else
+            context.Context.init(self, "battle"..battleCount)
+        end
+        self.leftArmy = leftArmy
+        self.rightArmy = rightArmy
+        self.isFullScreen = true
+    end
+}
+
+function Battle:load()
     audio.play(audio.songs.theme2)
     self.index = sprite.SpatialIndex(32, 32)
-    self.playerArmy = {
-        {
-            name = "Alistair",
-            image = images.loaded.commander,
-            pos = vector(400, 10),
-            sx = 1/4,
-            sy = 1/4,
-            speed = 20,
-            health = 10,
-        },
-        {
-            name = "Lans",
-            image = images.loaded.commander,
-            pos = vector(400, 110),
-            sx = 1/4,
-            sy = 1/4,
-            speed = 20,
-            health = 10,
-        },
-        {
-            name = "Gareth",
-            image = images.loaded.commander,
-            pos = vector(400, 210),
-            sx = 1/4,
-            sy = 1/4,
-            speed = 20,
-            health = 10,
-        }
-    }
-    self.enemyArmy = {
-        {
-            name = "Laranjinha",
-            image = images.loaded.commander,
-            pos = vector(200, 10),
-            sx = -1/4,
-            sy = 1/4,
-            speed = 20,
-            health = 10,
-        },
-        {
-            name = "Acerola",
-            image = images.loaded.commander,
-            pos = vector(200, 110),
-            sx = -1/4,
-            sy = 1/4,
-            speed = 20,
-            health = 10,
-        }
-    }
-    self.winner = ''
+
+    -- Lay out the troops on the battlefield
+    local leftDeploment = {}
+    local rightDeploment = {}
+    local x, xDelta, y, yDelta
+    x = 200
+    xDelta = 200
+    y = 10
+    yDelta = 100
+    for i, troop in pairs(self.leftArmy.troops) do
+        troop.sx = -1/4
+        troop.sy = 1/4
+        troop.pos = vector(x, y)
+        table.insert(leftDeploment, troop)
+        y = y + yDelta
+    end
+
+    x = x + xDelta
+    y = 10
+    for i, troop in pairs(self.rightArmy.troops) do
+        troop.sx = 1/4
+        troop.sy = 1/4
+        troop.pos = vector(x, y)
+        table.insert(rightDeploment, troop)
+        y = y + yDelta
+    end
+
+    self.leftDeploment = leftDeploment
+    self.rightDeploment = rightDeploment
+    self.winner = nil
 end
 
-battle.unload = function(self)
-    print(self.winner .. " won the battle")
+function Battle:unload()
+    print(self.winner.name .. " won " .. self.name)
 end
 
-battle.update = function(self, dt)
-    for i, unit in pairs(self.enemyArmy) do
+function Battle:update(dt)
+    -- Resolve unit movement
+    for i, unit in pairs(self.leftDeploment) do
         local target = nil
         local targetDistance = nil
-        for i, foe in pairs(self.playerArmy) do
+        for i, foe in pairs(self.rightDeploment) do
             if target == nil then
                 target = foe
                 targetDistance = (foe.pos - unit.pos):len()
@@ -82,9 +76,11 @@ battle.update = function(self, dt)
         end
         self.index:registerPos(unit)
     end
-    for i, unit in pairs(self.playerArmy) do
+    for i, unit in pairs(self.rightDeploment) do
         self.index:registerPos(unit)
     end
+
+    -- Resolve unit attacks
     self.index:checkCollisions(dt, function(dt, sprites)
         for i, sprt0 in pairs(sprites) do
             for i, sprt1 in pairs(sprites) do
@@ -96,36 +92,42 @@ battle.update = function(self, dt)
         end
     end)
     self.index:clear()
-    for i, unit in pairs(self.playerArmy) do
+
+    -- Clear out defeated units
+    for i, unit in pairs(self.leftDeploment) do
         if unit.health <= 0 then
-            self.playerArmy[i] = nil
+            self.leftDeploment[i] = nil
         end
     end
-    for i, unit in pairs(self.enemyArmy) do
+    for i, unit in pairs(self.rightDeploment) do
         if unit.health <= 0 then
-            self.enemyArmy[i] = nil
+            self.rightDeploment[i] = nil
         end
     end
-    if #self.playerArmy == 0 then
-        self.winner = 'enemy'
+
+    -- Check for winning conditions
+    if #self.rightDeploment == 0 then
+        self.winner = self.leftArmy
+        self.rightArmy.defeated = true
         context.pop()
-    elseif #self.enemyArmy == 0 then
-        self.winner = 'player'
+    elseif #self.leftDeploment == 0 then
+        self.winner = self.rightArmy
+        self.leftArmy.defeated = true
         context.pop()
     end
 end
 
-battle.draw = function(self)
+function Battle:draw()
     love.graphics.setColor(255, 255, 255)
     love.graphics.rectangle("fill", 0, 0, 640, 480)
-    for i, player in pairs(self.playerArmy) do
-        sprite.draw(player)
+    for i, troop in pairs(self.leftDeploment) do
+        sprite.draw(troop)
     end
-    for i, enemy in pairs(self.enemyArmy) do
-        sprite.draw(enemy)
+    for i, troop in pairs(self.rightDeploment) do
+        sprite.draw(troop)
     end
 end
 
 return {
-    ctx = battle,
+    Battle = Battle,
 }

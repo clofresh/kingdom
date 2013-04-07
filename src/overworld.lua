@@ -22,14 +22,36 @@ overworld.load = function(self)
     assert(playerStart)
 
     local commander = {
+        name = "Mormont",
         image = images.loaded.commander,
         pos = vector(playerStart.x, playerStart.y),
         sx = 1/8,
         sy = 1/8,
         ox = 0,
         oy = 0,
+        troops = {
+            {
+                name = "Alistair",
+                image = images.loaded.commander,
+                speed = 20,
+                health = 10,
+            },
+            {
+                name = "Lans",
+                image = images.loaded.commander,
+                speed = 20,
+                health = 10,
+            },
+            {
+                name = "Gareth",
+                image = images.loaded.commander,
+                speed = 20,
+                health = 10,
+            },
+        },
     }
     local enemy = {
+        name = "Madrugadao",
         image = images.loaded.commander,
         pos = vector(enemyStart.x, enemyStart.y),
         sx = -1/8,
@@ -37,6 +59,20 @@ overworld.load = function(self)
         ox = 256,
         oy = 0,
         speed = 20,
+        troops = {
+            {
+                name = "Laranjinha",
+                image = images.loaded.commander,
+                speed = 20,
+                health = 10,
+            },
+            {
+                name = "Acerola",
+                image = images.loaded.commander,
+                speed = 20,
+                health = 10,
+            },
+        },
     }
 
     local script = [[Commander: Ahoy there!
@@ -45,7 +81,7 @@ Commander: Not much.
 Enemy: Aiight.
 ]]
     local greetings = dialogue.Dialogue("greetings", script, enemy, commander,
-        function() context.replace(battle.ctx) end)
+        battle.Battle(enemy, commander))
     enemy.onCollision = greetings
     self.commander = commander
     self.enemy = enemy
@@ -53,13 +89,6 @@ end
 
 overworld.reenter = function(self, exitingContext)
     audio.play(self.song)
-    if exitingContext.name == 'battle' then
-        if exitingContext.winner == 'player' then
-            self.enemy = nil
-        elseif exitingContext.winner == 'enemy' then
-            self.commander = nil
-        end
-    end
 end
 
 overworld.update = function(self, dt)
@@ -77,7 +106,7 @@ overworld.update = function(self, dt)
 end
 
 overworld.updatePlayer = function(self, dt)
-    if self.commander then
+    if not self.commander.defeated then
         if love.keyboard.isDown("w") then
             self.commander.pos.y = self.commander.pos.y - 1
         elseif love.keyboard.isDown("s") then
@@ -98,7 +127,7 @@ overworld.updatePlayer = function(self, dt)
 end
 
 overworld.updateEnemy = function(self, dt)
-    if self.enemy then
+    if not self.enemy.defeated then
         -- Move towards the player
         if self.commander then
             local dir = (self.commander.pos - self.enemy.pos):normalized()
@@ -112,12 +141,12 @@ overworld.draw = function(self)
     local xPos = -1
     local yPos = -1
     self.map:draw()
-    if self.commander then
+    if not self.commander.defeated then
         sprite.draw(self.commander)
         xPos = self.commander.pos.x
         yPos = self.commander.pos.y
     end
-    if self.enemy then
+    if not self.enemy.defeated then
         sprite.draw(self.enemy)
     end
 
