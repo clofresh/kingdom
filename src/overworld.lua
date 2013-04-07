@@ -1,38 +1,6 @@
 local ATL = require("lib/Advanced-Tiled-Loader").Loader
 ATL.path = "maps/"
 
-local greetings = context.Context("greetings")
-
-greetings.load = function(self)
-    audio.stop()
-
-    local script = [[Commander: Ahoy there!
-Enemy: Sup!
-Commander: Not much.
-Enemy: Aiight.
-]]
-    self.script = dialogue.lineIterator(script)
-    self.currentLine = self.script()
-
-    love.keyreleased = function(key)
-        if key == "return" then
-            self.currentLine = self.script()
-            if not self.currentLine then
-                context.replace(battle.ctx)
-            end
-        end
-    end
-
-end
-
-greetings.unload = function(self)
-    love.keyreleased = nil
-end
-
-greetings.draw = function (self)
-    dialogue.draw(self.left, self.right, self.currentLine)
-end
-
 local overworld = context.Context("overworld")
 overworld.isFullScreen = true
 overworld.load = function(self)
@@ -70,9 +38,15 @@ overworld.load = function(self)
         oy = 0,
         speed = 20,
     }
-    greetings.right = commander
-    greetings.left = enemy
-    enemy.onCollision = greetings 
+
+    local script = [[Commander: Ahoy there!
+Enemy: Sup!
+Commander: Not much.
+Enemy: Aiight.
+]]
+    local greetings = dialogue.Dialogue("greetings", script, enemy, commander,
+        function() context.replace(battle.ctx) end)
+    enemy.onCollision = greetings
     self.commander = commander
     self.enemy = enemy
 end

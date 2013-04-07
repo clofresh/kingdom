@@ -20,19 +20,47 @@ function drawPortrait(sprite, portrait)
     love.graphics.setStencil()
 end
 
-function draw(lSprite, rSprite, line)
-    drawPortrait(lSprite, leftPortrait)
-    drawPortrait(rSprite, rightPortrait)
-    if line then
-        love.graphics.print(line, 150, 430)
-    end
-end
-
 function lineIterator(text)
     return text:gmatch('(.-)\n()')
 end
 
+local Dialogue = Class{__includes=context.Context,
+    init = function(self, name, script, left, right, onFinished)
+        context.Context.init(self, name)
+        self.scriptText = script
+        self.script = lineIterator(script)
+        self.left = left
+        self.right = right
+        self.onFinished = onFinished
+    end
+}
+
+function Dialogue:load()
+    audio.stop()
+
+    self.currentLine = self.script()
+    love.keyreleased = function(key)
+        if key == "return" then
+            self.currentLine = self.script()
+            if not self.currentLine then
+                self.onFinished()
+            end
+        end
+    end
+end
+
+function Dialogue:unload()
+    love.keyreleased = nil
+end
+
+function Dialogue:draw()
+    drawPortrait(self.left, leftPortrait)
+    drawPortrait(self.right, rightPortrait)
+    if self.currentLine then
+        love.graphics.print(self.currentLine, 150, 430)
+    end
+end
+
 return {
-    draw = draw,
-    lineIterator = lineIterator
+    Dialogue = Dialogue,
 }
