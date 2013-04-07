@@ -13,9 +13,6 @@ dialogue  = require "src/dialogue"
 images    = require "src/images"
 sprite    = require "src/sprite"
 
--- global state
-currentSong = nil
-
 function love.load()
     audio.load()
     images.load()
