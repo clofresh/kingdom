@@ -4,9 +4,14 @@ local SpatialIndex = Class{function(self, xMod, yMod)
     self._positions = {}
 end}
 
-function SpatialIndex:registerPos(sprite)
+function SpatialIndex:getXY(sprite)
     local x = math.floor(sprite.pos.x / self.xMod)
     local y = math.floor(sprite.pos.y / self.yMod)
+    return x, y
+end
+
+function SpatialIndex:registerPos(sprite)
+    local x, y = self:getXY(sprite)
     local positions = self._positions
     if not positions[x] then
         positions[x] = {[y] = {sprite}}
@@ -14,6 +19,16 @@ function SpatialIndex:registerPos(sprite)
         positions[x][y] = {sprite}
     else
         table.insert(positions[x][y], sprite)
+    end
+end
+
+function SpatialIndex:getNeighbors(sprite)
+    local x, y = self:getXY(sprite)
+    local positions = self._positions
+    if not positions[x] or not positions[x][y] then
+        return {}
+    else
+        return positions[x][y]
     end
 end
 

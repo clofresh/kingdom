@@ -8,10 +8,12 @@ battle    = require "src/battle"
 overworld = require "src/overworld"
 
 -- kingdom libraries
+menu      = require "src/menu"
 audio     = require "src/audio"
 dialogue  = require "src/dialogue"
 images    = require "src/images"
 sprite    = require "src/sprite"
+town      = require "src/town"
 
 function love.load()
     audio.load()

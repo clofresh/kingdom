@@ -9,6 +9,7 @@ overworld.load = function(self)
     self.map = ATL.load("kingdom.tmx")
     self.map.drawObjects = false
     self.index = sprite.SpatialIndex(32, 32)
+    self.towns = {}
 
     local enemyStart, playerStart
     for i, obj in pairs(self.map("armies").objects) do
@@ -20,6 +21,12 @@ overworld.load = function(self)
     end
     assert(enemyStart)
     assert(playerStart)
+
+    for i, obj in pairs(self.map("towns").objects) do
+        local twn = town.fromTmx(obj)
+        table.insert(self.towns, twn)
+        print("Loaded town: " .. twn.name)
+    end
 
     local commander = {
         name = "Mormont",
@@ -82,7 +89,12 @@ Enemy: Aiight.
 ]]
     local greetings = dialogue.Dialogue("greetings", script, enemy, commander,
         battle.Battle(enemy, commander))
-    enemy.onCollision = greetings
+    enemy.onCollision = function(self, sprites)
+        if not self.greeted then
+            context.push(greetings)
+            self.greeted = true
+        end
+    end
     self.commander = commander
     self.enemy = enemy
 end
@@ -92,13 +104,15 @@ overworld.reenter = function(self, exitingContext)
 end
 
 overworld.update = function(self, dt)
+    for i, twn in pairs(self.towns) do
+        self.index:registerPos(twn)
+    end
     self:updatePlayer(dt)
     self:updateEnemy(dt)
     self.index:checkCollisions(dt, function(dt, sprites)
         for i, sprt in pairs(sprites) do
             if sprt.onCollision then
-                context.push(sprt.onCollision)
-                sprt.onCollision = nil
+                sprt:onCollision(sprites)
             end
         end
     end)
@@ -123,6 +137,12 @@ overworld.updatePlayer = function(self, dt)
             self.commander.ox = 256
         end
         self.index:registerPos(self.commander)
+        if self.commander.inTown then
+            local neighbors = self.index:getNeighbors(self.commander)
+            if #neighbors == 1 then
+                self.commander.inTown = false
+            end
+        end
     end
 end
 

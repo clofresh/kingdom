@@ -62,7 +62,6 @@ end
 
 function load(initialContexts)
     stack = ContextStack(initialContexts)
-    val = "blah"
 end
 
 function update(dt)
