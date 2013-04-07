@@ -127,5 +127,5 @@ battle.draw = function(self)
 end
 
 return {
-    battle = battle,
+    ctx = battle,
 }
