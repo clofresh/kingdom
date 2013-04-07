@@ -39,11 +39,23 @@ overworld.load = function(self)
     self.song = audio.songs.theme1
     audio.play(self.song)
     self.map = ATL.load("kingdom.tmx")
+    self.map.drawObjects = false
     self.index = sprite.SpatialIndex(32, 32)
+
+    local enemyStart, playerStart
+    for i, obj in pairs(self.map("armies").objects) do
+        if obj.name == "enemyStart" then
+            enemyStart = obj
+        elseif obj.name == "playerStart" then
+            playerStart = obj
+        end
+    end
+    assert(enemyStart)
+    assert(playerStart)
 
     local commander = {
         image = images.loaded.commander,
-        pos = vector(453, 257),
+        pos = vector(playerStart.x, playerStart.y),
         sx = 1/8,
         sy = 1/8,
         ox = 0,
@@ -51,7 +63,7 @@ overworld.load = function(self)
     }
     local enemy = {
         image = images.loaded.commander,
-        pos = vector(162, 162),
+        pos = vector(enemyStart.x, enemyStart.y),
         sx = -1/8,
         sy = 1/8,
         ox = 256,

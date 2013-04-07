@@ -111,4 +111,8 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
+ <objectgroup name="armies" width="40" height="30">
+  <object name="enemyStart" x="176" y="176" width="16" height="16"/>
+  <object name="playerStart" x="464" y="272" width="16" height="16"/>
+ </objectgroup>
 </map>
