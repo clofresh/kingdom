@@ -42,7 +42,7 @@ overworld.load = function(self)
     self.index = sprite.SpatialIndex(32, 32)
 
     local commander = {
-        image = images.commander,
+        image = images.loaded.commander,
         pos = vector(453, 257),
         sx = 1/8,
         sy = 1/8,
@@ -50,7 +50,7 @@ overworld.load = function(self)
         oy = 0,
     }
     local enemy = {
-        image = images.commander,
+        image = images.loaded.commander,
         pos = vector(162, 162),
         sx = -1/8,
         sy = 1/8,

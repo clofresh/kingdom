@@ -7,14 +7,14 @@ sprite = require("src/sprite")
 battle = require("src/battle")
 overworld = require("src/overworld")
 audio = require("src/audio")
+images = require("src/images")
 
 contextStack = nil
 currentSong = nil
-images = {}
 
 function love.load()
-    images.commander = love.graphics.newImage("units/commander.png")
     audio.load()
+    images.load()
     contextStack = context.ContextStack({overworld.ctx})
 end
 

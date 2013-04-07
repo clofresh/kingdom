@@ -6,7 +6,7 @@ battle.load = function(self)
     self.playerArmy = {
         {
             name = "Alistair",
-            image = images.commander,
+            image = images.loaded.commander,
             pos = vector(400, 10),
             sx = 1/4,
             sy = 1/4,
@@ -15,7 +15,7 @@ battle.load = function(self)
         },
         {
             name = "Lans",
-            image = images.commander,
+            image = images.loaded.commander,
             pos = vector(400, 110),
             sx = 1/4,
             sy = 1/4,
@@ -24,7 +24,7 @@ battle.load = function(self)
         },
         {
             name = "Gareth",
-            image = images.commander,
+            image = images.loaded.commander,
             pos = vector(400, 210),
             sx = 1/4,
             sy = 1/4,
@@ -35,7 +35,7 @@ battle.load = function(self)
     self.enemyArmy = {
         {
             name = "Laranjinha",
-            image = images.commander,
+            image = images.loaded.commander,
             pos = vector(200, 10),
             sx = -1/4,
             sy = 1/4,
@@ -44,7 +44,7 @@ battle.load = function(self)
         },
         {
             name = "Acerola",
-            image = images.commander,
+            image = images.loaded.commander,
             pos = vector(200, 110),
             sx = -1/4,
             sy = 1/4,
