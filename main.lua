@@ -1,39 +1,33 @@
-Class = require "lib/hump/class"
+-- third-party helper libraries
+Class  = require "lib/hump/class"
 vector = require "lib/hump/vector"
 
-context = require("src/context")
-dialogue = require("src/dialogue")
-sprite = require("src/sprite")
-battle = require("src/battle")
-overworld = require("src/overworld")
-audio = require("src/audio")
-images = require("src/images")
+-- kingdom context modules
+context   = require "src/context"
+battle    = require "src/battle"
+overworld = require "src/overworld"
 
-contextStack = nil
+-- kingdom libraries
+audio     = require "src/audio"
+dialogue  = require "src/dialogue"
+images    = require "src/images"
+sprite    = require "src/sprite"
+
+-- global state
 currentSong = nil
 
 function love.load()
     audio.load()
     images.load()
-    contextStack = context.ContextStack({overworld.ctx})
+    context.load({overworld.ctx})
 end
 
 function love.update(dt)
-    local currentContext = contextStack:peek()
-    if currentContext then
-        currentContext:update(dt)
-    end
+    context.update(dt)
 end
 
 function love.draw()
-    local top = contextStack:peek()
-    if top.isFullScreen then
-        top:draw()
-    else
-        for i, ctx in pairs(contextStack.contexts) do
-            ctx:draw()
-        end
-    end
+    context.draw()
 end
 
 

@@ -108,10 +108,10 @@ battle.update = function(self, dt)
     end
     if #self.playerArmy == 0 then
         self.winner = 'enemy'
-        contextStack:pop()
+        context.pop()
     elseif #self.enemyArmy == 0 then
         self.winner = 'player'
-        contextStack:pop()
+        context.pop()
     end
 end
 

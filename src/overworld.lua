@@ -18,7 +18,7 @@ Enemy: Aiight.
         if key == "return" then
             self.currentLine = self.script()
             if not self.currentLine then
-                contextStack:replace(battle.ctx)
+                context.replace(battle.ctx)
             end
         end
     end
@@ -82,7 +82,7 @@ overworld.update = function(self, dt)
     self.index:checkCollisions(dt, function(dt, sprites)
         for i, sprt in pairs(sprites) do
             if sprt.onCollision then
-                contextStack:push(sprt.onCollision)
+                context.push(sprt.onCollision)
                 sprt.onCollision = nil
             end
         end
