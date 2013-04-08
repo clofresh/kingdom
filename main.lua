@@ -14,12 +14,14 @@ dialogue  = require "src/dialogue"
 images    = require "src/images"
 sprite    = require "src/sprite"
 town      = require "src/town"
+army      = require "src/army"
 
 function love.load()
     audio.load()
     images.load()
+    army.loadNames("names/american.txt")
     Gamestate.registerEvents()
-    Gamestate.switch(overworld.state)
+    Gamestate.switch(overworld.state, "kingdom.tmx")
 end
 
 function love.draw()

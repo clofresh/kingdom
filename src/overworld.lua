@@ -11,15 +11,33 @@ function Overworld:init()
     self.index = sprite.SpatialIndex(32, 32)
     self.towns = {}
 
-    local enemyStart, playerStart
+    local playerStart, enemy
     for i, obj in pairs(self.map("armies").objects) do
-        if obj.name == "enemyStart" then
-            enemyStart = obj
-        elseif obj.name == "playerStart" then
+        if obj.name == "Madrugadao" then
+            local troops = {}
+            while #troops < obj.properties.numTroops do
+                table.insert(troops, {
+                    name = army.randomName(),
+                    image = images.loaded[obj.properties.image],
+                    speed = 20,
+                    health = 10,
+                })
+            end
+            enemy = {
+                name = obj.name,
+                image = images.loaded[obj.properties.image],
+                pos = vector(obj.x, obj.y),
+                sx = -1/8,
+                sy = 1/8,
+                ox = 256,
+                oy = 0,
+                speed = obj.properties.speed,
+                troops = troops,
+            }
+        elseif obj.name == "Player" then
             playerStart = obj
         end
     end
-    assert(enemyStart)
     assert(playerStart)
 
     for i, obj in pairs(self.map("towns").objects) do
@@ -38,43 +56,19 @@ function Overworld:init()
         oy = 0,
         troops = {
             {
-                name = "Alistair",
+                name = army.randomName(),
                 image = images.loaded.commander,
                 speed = 20,
                 health = 10,
             },
             {
-                name = "Lans",
+                name = army.randomName(),
                 image = images.loaded.commander,
                 speed = 20,
                 health = 10,
             },
             {
-                name = "Gareth",
-                image = images.loaded.commander,
-                speed = 20,
-                health = 10,
-            },
-        },
-    }
-    local enemy = {
-        name = "Madrugadao",
-        image = images.loaded.commander,
-        pos = vector(enemyStart.x, enemyStart.y),
-        sx = -1/8,
-        sy = 1/8,
-        ox = 256,
-        oy = 0,
-        speed = 20,
-        troops = {
-            {
-                name = "Laranjinha",
-                image = images.loaded.commander,
-                speed = 20,
-                health = 10,
-            },
-            {
-                name = "Acerola",
+                name = army.randomName(),
                 image = images.loaded.commander,
                 speed = 20,
                 health = 10,
