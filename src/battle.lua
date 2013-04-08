@@ -1,19 +1,8 @@
 local battleCount = 0
-local Battle = Class{__includes=context.Context,
-    init = function(self, leftArmy, rightArmy, name)
-        battleCount = battleCount + 1
-        if name then
-            context.Context.init(self, name)
-        else
-            context.Context.init(self, "battle"..battleCount)
-        end
-        self.leftArmy = leftArmy
-        self.rightArmy = rightArmy
-        self.isFullScreen = true
-    end
-}
+local Battle = {}
 
-function Battle:load()
+function Battle:enter(prevState, leftArmy, rightArmy, nextState)
+    battleCount = battleCount + 1
     audio.play(audio.songs.theme2)
     self.index = sprite.SpatialIndex(32, 32)
 
@@ -25,7 +14,7 @@ function Battle:load()
     xDelta = 200
     y = 10
     yDelta = 100
-    for i, troop in pairs(self.leftArmy.troops) do
+    for i, troop in pairs(leftArmy.troops) do
         troop.sx = -1/4
         troop.sy = 1/4
         troop.pos = vector(x, y)
@@ -35,7 +24,7 @@ function Battle:load()
 
     x = x + xDelta
     y = 10
-    for i, troop in pairs(self.rightArmy.troops) do
+    for i, troop in pairs(rightArmy.troops) do
         troop.sx = 1/4
         troop.sy = 1/4
         troop.pos = vector(x, y)
@@ -45,11 +34,10 @@ function Battle:load()
 
     self.leftDeploment = leftDeploment
     self.rightDeploment = rightDeploment
+    self.leftArmy = leftArmy
+    self.rightArmy = rightArmy
+    self.nextState = nextState or prevState
     self.winner = nil
-end
-
-function Battle:unload()
-    print(self.winner.name .. " won " .. self.name)
 end
 
 function Battle:update(dt)
@@ -107,13 +95,11 @@ function Battle:update(dt)
 
     -- Check for winning conditions
     if #self.rightDeploment == 0 then
-        self.winner = self.leftArmy
-        self.rightArmy.defeated = true
-        context.pop()
+        print(self.leftArmy.name .. " won battle " .. battleCount)
+        Gamestate.switch(self.nextState, self.leftArmy, self.rightArmy)
     elseif #self.leftDeploment == 0 then
-        self.winner = self.rightArmy
-        self.leftArmy.defeated = true
-        context.pop()
+        print(self.rightArmy.name .. " won battle " .. battleCount)
+        Gamestate.switch(self.nextState, self.rightArmy, self.leftArmy)
     end
 end
 
@@ -129,5 +115,5 @@ function Battle:draw()
 end
 
 return {
-    Battle = Battle,
+    state = Battle,
 }

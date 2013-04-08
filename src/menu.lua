@@ -1,23 +1,22 @@
-local Menu = Class{__includes=context.Context,
-    init = function(self, name, pos, options, selectedIndex)
-        self.name = name
-        self.pos = pos
-        self.options = options
-        self.selectedIndex = selectedIndex or 1
-    end}
+local Menu = {}
 
-function Menu:load()
-    love.keyreleased = function(key)
-        if key == "escape" then
-            context:pop()
-        elseif key == "w" then
-            self:selectPrev()
-        elseif key == "s" then
-            self:selectNext()
-        elseif key == "return" then
-            print("Selected " .. self:selectedOption().name)
-            context.pop()
-        end
+function Menu:enter(prevState, pos, options, selectedIndex, nextState)
+    self.pos = pos
+    self.options = options
+    self.selectedIndex = selectedIndex or 1
+    self.nextState = nextState or prevState
+end
+
+function Menu:keyreleased(key)
+    if key == "escape" then
+        Gamestate.switch(self.nextState)
+    elseif key == "w" then
+        self:selectPrev()
+    elseif key == "s" then
+        self:selectNext()
+    elseif key == "return" then
+        print("Selected " .. self:selectedOption().name)
+        Gamestate.switch(self.nextState)
     end
 end
 
@@ -64,5 +63,5 @@ function Menu:draw()
 end
 
 return {
-    Menu = Menu,
+    state = Menu,
 }

@@ -1,9 +1,9 @@
 local ATL = require("lib/Advanced-Tiled-Loader").Loader
 ATL.path = "maps/"
 
-local overworld = context.Context("overworld")
-overworld.isFullScreen = true
-overworld.load = function(self)
+local Overworld = {name="overworld"}
+Overworld.isFullScreen = true
+function Overworld:init()
     self.song = audio.songs.theme1
     audio.play(self.song)
     self.map = ATL.load("kingdom.tmx")
@@ -87,11 +87,9 @@ Enemy: Sup!
 Commander: Not much.
 Enemy: Aiight.
 ]]
-    local greetings = dialogue.Dialogue("greetings", script, enemy, commander,
-        battle.Battle(enemy, commander))
     enemy.onCollision = function(self, sprites)
         if not self.greeted then
-            context.push(greetings)
+            Gamestate.switch(dialogue.state, "greetings", script, enemy, commander, battle.state, enemy, commander, Overworld)
             self.greeted = true
         end
     end
@@ -99,11 +97,15 @@ Enemy: Aiight.
     self.enemy = enemy
 end
 
-overworld.reenter = function(self, exitingContext)
+function Overworld:enter(prevState, ...)
     audio.play(self.song)
+    if prevState == battle.state then
+        local winner, loser = unpack({...})
+        loser.defeated = true
+    end
 end
 
-overworld.update = function(self, dt)
+function Overworld:update(dt)
     for i, twn in pairs(self.towns) do
         self.index:registerPos(twn)
     end
@@ -119,7 +121,7 @@ overworld.update = function(self, dt)
     self.index:clear()
 end
 
-overworld.updatePlayer = function(self, dt)
+function Overworld:updatePlayer(dt)
     if not self.commander.defeated then
         if love.keyboard.isDown("w") then
             self.commander.pos.y = self.commander.pos.y - 1
@@ -146,7 +148,7 @@ overworld.updatePlayer = function(self, dt)
     end
 end
 
-overworld.updateEnemy = function(self, dt)
+function Overworld:updateEnemy(dt)
     if not self.enemy.defeated then
         -- Move towards the player
         if self.commander then
@@ -157,7 +159,7 @@ overworld.updateEnemy = function(self, dt)
     end
 end
 
-overworld.draw = function(self)
+function Overworld:draw()
     local xPos = -1
     local yPos = -1
     self.map:draw()
@@ -179,5 +181,5 @@ Pos: (%f, %f)
 end
 
 return {
-    ctx = overworld,
+    state = Overworld,
 }

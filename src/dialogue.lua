@@ -24,37 +24,26 @@ function lineIterator(text)
     return text:gmatch('(.-)\n()')
 end
 
-local Dialogue = Class{__includes=context.Context,
-    init = function(self, name, script, left, right, nextContext)
-        context.Context.init(self, name)
-        self.scriptText = script
-        self.script = lineIterator(script)
-        self.left = left
-        self.right = right
-        self.nextContext = nextContext
-    end
-}
+local Dialogue = {}
 
-function Dialogue:load()
+function Dialogue:enter(prevState, name, script, left, right, nextState, ...)
     audio.stop()
-
+    self.scriptText = script
+    self.script = lineIterator(script)
+    self.left = left
+    self.right = right
+    self.nextState = nextState or prevState
+    self.nextStateArgs = {...}
     self.currentLine = self.script()
-    love.keyreleased = function(key)
-        if key == "return" then
-            self.currentLine = self.script()
-            if not self.currentLine then
-                if self.nextContext then
-                    context.replace(self.nextContext)
-                else
-                    context.pop()
-                end
-            end
-        end
-    end
 end
 
-function Dialogue:unload()
-    love.keyreleased = nil
+function Dialogue:keyreleased(key)
+    if key == "return" then
+        self.currentLine = self.script()
+        if not self.currentLine then
+            Gamestate.switch(self.nextState, unpack(self.nextStateArgs))
+        end
+    end
 end
 
 function Dialogue:draw()
@@ -66,5 +55,5 @@ function Dialogue:draw()
 end
 
 return {
-    Dialogue = Dialogue,
+    state = Dialogue,
 }

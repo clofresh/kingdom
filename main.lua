@@ -1,9 +1,9 @@
 -- third-party helper libraries
-Class  = require "lib/hump/class"
-vector = require "lib/hump/vector"
+Gamestate = require "lib/hump/gamestate"
+Class     = require "lib/hump/class"
+vector    = require "lib/hump/vector"
 
 -- kingdom context modules
-context   = require "src/context"
 battle    = require "src/battle"
 overworld = require "src/overworld"
 
@@ -18,16 +18,10 @@ town      = require "src/town"
 function love.load()
     audio.load()
     images.load()
-    context.load({overworld.ctx})
-end
-
-function love.update(dt)
-    context.update(dt)
+    Gamestate.registerEvents()
+    Gamestate.switch(overworld.state)
 end
 
 function love.draw()
-    context.draw()
+    overworld.state:draw()
 end
-
-
-
