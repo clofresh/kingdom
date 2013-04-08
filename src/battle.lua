@@ -84,12 +84,14 @@ function Battle:update(dt)
     -- Clear out defeated units
     for i, unit in pairs(self.leftDeploment) do
         if unit.health <= 0 then
-            self.leftDeploment[i] = nil
+            table.remove(self.leftDeploment, i)
+            print(unit.name .. " is dead")
         end
     end
     for i, unit in pairs(self.rightDeploment) do
         if unit.health <= 0 then
-            self.rightDeploment[i] = nil
+            table.remove(self.rightDeploment, i)
+            print(unit.name .. " is dead")
         end
     end
 
