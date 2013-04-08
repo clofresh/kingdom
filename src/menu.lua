@@ -1,6 +1,8 @@
 local Menu = {}
 
-function Menu:enter(prevState, pos, options, selectedIndex, nextState)
+function Menu:enter(prevState, activator, pos, options, selectedIndex,
+                    nextState)
+    self.activator = activator
     self.pos = pos
     self.options = options
     self.selectedIndex = selectedIndex or 1
@@ -15,13 +17,14 @@ function Menu:keyreleased(key)
     elseif key == "s" then
         self:selectNext()
     elseif key == "return" then
-        print("Selected " .. self:selectedOption().name)
-        Gamestate.switch(self.nextState)
+        self:execute(self.selectedIndex, activator)
     end
 end
 
-function Menu:selectedOption()
-    return self.options[self.selectedIndex]
+function Menu:execute(selectedIndex, activator)
+    local selected =  self.options[selectedIndex]
+    print("Executing " .. selected.name)
+    selected.execute(self)
 end
 
 function Menu:selectPrev()

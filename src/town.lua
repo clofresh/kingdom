@@ -1,6 +1,23 @@
 local defaultOptions = {
-    {name = "Recruit"},
-    {name = "Exit"},
+    {
+        name = "Recruit",
+        execute = function(menu)
+            print("Recruited")
+            table.insert(menu.activator.troops, {
+                name = "New Guy",
+                image = images.loaded.commander,
+                speed = 25,
+                health = 5,
+            })
+            Gamestate.switch(menu.nextState, selected)
+        end
+    },
+    {
+        name = "Exit",
+        execute = function(menu)
+            Gamestate.switch(menu.nextState, selected)
+        end
+    },
 }
 
 local Town = Class{function(self, name, pos, options)
@@ -13,7 +30,7 @@ function Town:onCollision(sprites)
     for i, spr in pairs(sprites) do
         if spr ~= self and not spr.inTown then
             spr.inTown = true
-            Gamestate.switch(menu.state, self.pos, self.options)
+            Gamestate.switch(menu.state, spr, self.pos, self.options)
         end
     end
 end
