@@ -2,6 +2,10 @@ def name()
     "kingdom"
 end
 
+def versioned_name()
+    "#{name}-#{version}"
+end
+
 def version()
     %x[cat #{Rake.original_dir}/VERSION].strip
 end
@@ -11,15 +15,25 @@ def builddir()
 end
 
 def lovefile()
-    "#{name}-#{version}.love"
+    "#{versioned_name}.love"
 end
 
-def loveapp()
-    "/Applications/love.app"
+def loveapp(os)
+    if os == :osx
+        "/Applications/love.app"
+    elsif os == :windows
+        "/Volumes/BOOTCAMP/Program Files (x86)/LOVE"
+    else
+        raise "Unknown os: #{os.inspect}"
+    end
 end
 
 def appfile()
-    "#{name}-#{version}.app"
+    "#{versioned_name}.app"
+end
+
+def exefile()
+    "#{versioned_name}.exe"
 end
 
 directory builddir
@@ -41,7 +55,7 @@ end
 namespace :dist do
     desc 'Create a standalone OS X .app'
     task :osx => [:clean, :compile] do
-        sh "cp -r #{loveapp} #{builddir}/"
+        sh "cp -r #{loveapp :osx} #{builddir}/"
         sh "cp #{builddir}/#{lovefile} #{builddir}/love.app/Contents/Resources/"
         sh "cp etc/Info.plist #{builddir}/love.app/Contents/"
         sh "mv #{builddir}/love.app #{builddir}/#{appfile}"
@@ -51,6 +65,26 @@ namespace :dist do
     task :osx_zipped => [:osx] do
         cd builddir do
             sh "zip -r #{appfile}.zip #{appfile}"
+        end
+    end
+
+    desc 'Create a standalone Windows .app'
+    task :windows => [:clean, :compile] do
+        cd builddir do
+            sh <<-EOS
+                OUTPUT_DIR='#{versioned_name}'
+                APP_DIR='#{loveapp :windows}'
+                mkdir -p "$OUTPUT_DIR"
+                cat "$APP_DIR/love.exe" '#{lovefile}' > "$OUTPUT_DIR/#{exefile}"
+                cp "$APP_DIR"/*.dll "$OUTPUT_DIR"
+            EOS
+        end
+    end
+
+    desc 'Create a zipped standalone Windows .exe'
+    task :windows_zipped => [:windows] do
+        cd builddir do
+            sh "zip -r #{versioned_name}.zip #{versioned_name}"
         end
     end
 end
