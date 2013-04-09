@@ -50,6 +50,19 @@ def love_url(os)
     end
 end
 
+def upload(filename)
+    require 'cloudfiles'
+    require 'creds'
+
+    cf = CloudFiles::Connection.new(:username => RACKSPACE_USER,
+                                    :api_key  => RACKSPACE_API_KEY)
+    container = cf.container('games')
+    object = container.create_object File.basename(filename), false
+    object.load_from_filename filename
+    puts "Published #{filename} to #{object.public_url}"
+    object
+end
+
 directory builddir
 directory distdir(:osx)
 directory distdir(:win)
@@ -59,15 +72,21 @@ task :submodules do
     sh "git submodule update --init"
 end
 
-desc 'Compile a .love file'
-task :compile => [:submodules, builddir] do
-    sh <<-EOS
-        OUTPUT=#{builddir}/#{lovefile}
-        rm -f $OUTPUT
-        zip -r $OUTPUT * --exclude \\*.acorn #{builddir}/\\* \\*/.\\*
-    EOS
-end
+namespace :src do
+    desc 'Compile a .love file'
+    task :dist => [:submodules, builddir] do
+        sh <<-EOS
+            OUTPUT=#{builddir}/#{lovefile}
+            rm -f $OUTPUT
+            zip -r $OUTPUT * --exclude \\*.acorn #{builddir}/\\* \\*/.\\* creds.rb
+        EOS
+    end
 
+    desc 'Compile and publish a .love file to the CDN'
+    task :publish => [:dist] do
+        upload "#{builddir}/#{lovefile}"
+    end
+end
 
 task :osx => ["osx:zip"]
 namespace :osx do
@@ -91,7 +110,7 @@ namespace :osx do
     end
 
     desc 'Create a standalone OS X .app'
-    task :dist => [:get_love, :compile] do
+    task :dist => [:get_love, "src:dist"] do
         sh <<-EOS
             BUILD_DIR=#{builddir}
             DIST_DIR=#{distdir :osx}
@@ -114,6 +133,11 @@ namespace :osx do
             zip -r $OUTPUT #{appfile}
             cd -
         EOS
+    end
+
+    desc 'Compile and publish a zipped standalone OS X .app to the CDN'
+    task :publish => [:zip] do
+        upload "#{distdir :osx}/#{versioned_name}-osx.zip"
     end
 end
 
@@ -139,7 +163,7 @@ namespace :win do
     end
 
     desc 'Create a standalone Windows .app'
-    task :dist => [:get_love, :compile] do
+    task :dist => [:get_love, "src:dist"] do
         sh <<-EOS
             LOVE_DIR='#{lovedir :win}'
             BUILD_DIR='#{builddir}'
@@ -165,20 +189,11 @@ namespace :win do
             cd -
         EOS
     end
-end
 
-desc 'Compile and publish a .love file to the CDN'
-task :publish => [:compile] do
-    require 'cloudfiles'
-    require 'creds'
-
-    cf = CloudFiles::Connection.new(:username => RACKSPACE_USER,
-                                    :api_key  => RACKSPACE_API_KEY)
-    container = cf.container('games')
-    filename = "#{builddir}/#{lovefile}"
-    object = container.create_object File.basename(filename), false
-    object.load_from_filename filename
-    puts object.public_url
+    desc 'Compile and publish a zipped standalone Windows .exe to the CDN'
+    task :publish => [:zip] do
+        upload "#{distdir :win}/#{versioned_name}-win.zip"
+    end
 end
 
 desc 'Clean out the build directory'
@@ -186,4 +201,4 @@ task :clean do
     sh "rm -rf #{builddir}/*"
 end
 
-task :default => [:compile]
+task :default => ["src:dist"]
