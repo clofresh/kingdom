@@ -1,12 +1,10 @@
 local names = {}
 
 function loadNames(filename)
-    local f = io.open(filename, "r")
+    local contents, size = love.filesystem.read(filename)
 
     local count = 1
-    while true do
-      local line = f:read("*lines")
-      if line == nil then break end
+    for line in contents:gmatch('(.-)\n()') do
       table.insert(names, line)
       count = count + 1
     end
