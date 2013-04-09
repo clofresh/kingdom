@@ -3,7 +3,7 @@ def name()
 end
 
 def version()
-    %x[cat VERSION].strip
+    %x[cat #{Rake.original_dir}/VERSION].strip
 end
 
 def builddir()
@@ -16,6 +16,10 @@ end
 
 def loveapp()
     "/Applications/love.app"
+end
+
+def appfile()
+    "#{name}-#{version}.app"
 end
 
 directory builddir
@@ -35,12 +39,19 @@ task :compile => [:submodules, builddir] do
 end
 
 namespace :dist do
-    desc 'Bundle the .love file for OS X'
+    desc 'Create a standalone OS X .app'
     task :osx => [:clean, :compile] do
         sh "cp -r #{loveapp} #{builddir}/"
         sh "cp #{builddir}/#{lovefile} #{builddir}/love.app/Contents/Resources/"
         sh "cp etc/Info.plist #{builddir}/love.app/Contents/"
-        sh "mv #{builddir}/love.app #{builddir}/#{name}-#{version}.app"
+        sh "mv #{builddir}/love.app #{builddir}/#{appfile}"
+    end
+
+    desc 'Create a zipped standalone OS X .app'
+    task :osx_zipped => [:osx] do
+        cd builddir do
+            sh "zip -r #{appfile}.zip #{appfile}"
+        end
     end
 end
 
