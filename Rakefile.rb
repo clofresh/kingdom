@@ -52,40 +52,61 @@ task :compile => [:submodules, builddir] do
     EOS
 end
 
-namespace :dist do
+namespace :osx do
     desc 'Create a standalone OS X .app'
-    task :osx => [:clean, :compile] do
-        sh "cp -r #{loveapp :osx} #{builddir}/"
-        sh "cp #{builddir}/#{lovefile} #{builddir}/love.app/Contents/Resources/"
-        sh "cp etc/Info.plist #{builddir}/love.app/Contents/"
-        sh "mv #{builddir}/love.app #{builddir}/#{appfile}"
+    task :dist => [:compile] do
+        sh <<-EOS
+            BUILD_DIR=#{builddir}
+            OUTPUT_DIR=$BUILDDIR/#{appfile}
+
+            rm -rf ./$OUTPUT_DIR
+            cp -r #{loveapp :osx} $BUILD_DIR/
+            cp $BUILD_DIR/#{lovefile} $BUILD_DIR/love.app/Contents/Resources/
+            cp etc/Info.plist $BUILD_DIR/love.app/Contents/
+            mv $BUILD_DIR/love.app $BUILD_DIR/$OUTPUT_DIR
+        EOS
     end
 
     desc 'Create a zipped standalone OS X .app'
-    task :osx_zipped => [:osx] do
-        cd builddir do
-            sh "zip -r #{appfile}.zip #{appfile}"
-        end
-    end
+    task :zip => [:dist] do
+        sh <<-EOS
+            OUTPUT=#{versioned_name}-osx.zip
 
+            cd #{builddir}
+            rm -f $OUTPUT
+            zip -r $OUTPUT #{appfile}
+            cd -
+        EOS
+    end
+end
+
+namespace :win do
     desc 'Create a standalone Windows .app'
-    task :windows => [:clean, :compile] do
-        cd builddir do
-            sh <<-EOS
-                OUTPUT_DIR='#{versioned_name}'
-                APP_DIR='#{loveapp :windows}'
-                mkdir -p "$OUTPUT_DIR"
-                cat "$APP_DIR/love.exe" '#{lovefile}' > "$OUTPUT_DIR/#{exefile}"
-                cp "$APP_DIR"/*.dll "$OUTPUT_DIR"
-            EOS
-        end
+    task :win => [:compile] do
+        sh <<-EOS
+            OUTPUT_DIR='#{versioned_name}'
+            APP_DIR='#{loveapp :windows}'
+
+            cd #{builddir}
+            rm -rf "./$OUTPUT_DIR"
+            mkdir -p "$OUTPUT_DIR"
+            cat "$APP_DIR/love.exe" '#{lovefile}' > "./$OUTPUT_DIR/#{exefile}"
+            cp "$APP_DIR"/*.dll "./$OUTPUT_DIR"
+            cd -
+        EOS
     end
 
     desc 'Create a zipped standalone Windows .exe'
-    task :windows_zipped => [:windows] do
-        cd builddir do
-            sh "zip -r #{versioned_name}.zip #{versioned_name}"
-        end
+    task :win => [:dist] do
+        sh <<-EOS
+            NAME=#{versioned_name}
+            OUTPUT=$NAME-win.zip
+
+            cd #{builddir}
+            rm -f $OUTPUT
+            zip -r $OUTPUT $NAME
+            cd -
+        EOS
     end
 end
 
