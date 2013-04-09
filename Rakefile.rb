@@ -18,11 +18,15 @@ def lovefile()
     "#{versioned_name}.love"
 end
 
-def loveapp(os)
+def distdir(dist)
+    "#{builddir}/#{dist.to_s}"
+end
+
+def lovedir(os)
     if os == :osx
-        "/Applications/love.app"
-    elsif os == :windows
-        "/Volumes/BOOTCAMP/Program Files (x86)/LOVE"
+        "#{distdir os}/love.app"
+    elsif os == :win
+        "#{distdir os}/love-0.8.0-win-x86"
     else
         raise "Unknown os: #{os.inspect}"
     end
@@ -36,7 +40,19 @@ def exefile()
     "#{versioned_name}.exe"
 end
 
+def love_url(os)
+    if os == :osx
+        "https://bitbucket.org/rude/love/downloads/love-0.8.0-macosx-ub.zip"
+    elsif os == :win
+        "https://bitbucket.org/rude/love/downloads/love-0.8.0-win-x86.zip"
+    else
+        raise "Unknown os: #{os.inspect}"
+    end
+end
+
 directory builddir
+directory distdir(:osx)
+directory distdir(:win)
 
 desc 'Initialize and update the submodule dependencies'
 task :submodules do
@@ -47,23 +63,44 @@ desc 'Compile a .love file'
 task :compile => [:submodules, builddir] do
     sh <<-EOS
         OUTPUT=#{builddir}/#{lovefile}
-        rm $OUTPUT
-        zip -r $OUTPUT * --exclude \*.acorn #{builddir}/\* \*/.\*
+        rm -f $OUTPUT
+        zip -r $OUTPUT * --exclude \\*.acorn #{builddir}/\\* \\*/.\\*
     EOS
 end
 
+
+task :osx => ["osx:zip"]
 namespace :osx do
+    desc 'Downloads and unzips Love.app'
+    task :get_love => [distdir(:osx)] do
+        sh <<-EOS
+            URL=#{love_url :osx}
+            FILENAME=$(basename $URL)
+
+            cd #{distdir :osx}
+            if [ ! -f $FILENAME ]
+            then
+                curl -L $URL > $FILENAME
+            fi
+            if [ ! -d love.app ]
+            then
+                unzip $FILENAME
+            fi
+            cd -
+        EOS
+    end
+
     desc 'Create a standalone OS X .app'
-    task :dist => [:compile] do
+    task :dist => [:get_love, :compile] do
         sh <<-EOS
             BUILD_DIR=#{builddir}
-            OUTPUT_DIR=$BUILDDIR/#{appfile}
+            DIST_DIR=#{distdir :osx}
+            OUTPUT_DIR=$DIST_DIR/#{appfile}
 
             rm -rf ./$OUTPUT_DIR
-            cp -r #{loveapp :osx} $BUILD_DIR/
-            cp $BUILD_DIR/#{lovefile} $BUILD_DIR/love.app/Contents/Resources/
-            cp etc/Info.plist $BUILD_DIR/love.app/Contents/
-            mv $BUILD_DIR/love.app $BUILD_DIR/$OUTPUT_DIR
+            cp -r #{lovedir :osx} $OUTPUT_DIR
+            cp $BUILD_DIR/#{lovefile} $OUTPUT_DIR/Contents/Resources/
+            cp etc/Info.plist $OUTPUT_DIR/Contents
         EOS
     end
 
@@ -72,7 +109,7 @@ namespace :osx do
         sh <<-EOS
             OUTPUT=#{versioned_name}-osx.zip
 
-            cd #{builddir}
+            cd #{distdir :osx}
             rm -f $OUTPUT
             zip -r $OUTPUT #{appfile}
             cd -
@@ -80,29 +117,49 @@ namespace :osx do
     end
 end
 
+task :win => ["win:zip"]
 namespace :win do
-    desc 'Create a standalone Windows .app'
-    task :win => [:compile] do
+    desc 'Downloads and unzips love.exe and .dlls'
+    task :get_love => [distdir(:win)] do
         sh <<-EOS
-            OUTPUT_DIR='#{versioned_name}'
-            APP_DIR='#{loveapp :windows}'
+            URL=#{love_url :win}
+            FILENAME=$(basename $URL)
 
-            cd #{builddir}
-            rm -rf "./$OUTPUT_DIR"
-            mkdir -p "$OUTPUT_DIR"
-            cat "$APP_DIR/love.exe" '#{lovefile}' > "./$OUTPUT_DIR/#{exefile}"
-            cp "$APP_DIR"/*.dll "./$OUTPUT_DIR"
+            cd #{distdir :win}
+            if [ ! -f $FILENAME ]
+            then
+                curl -L $URL > $FILENAME
+            fi
+            if [ ! -d ${FILENAME%.zip} ]
+            then
+                unzip $FILENAME
+            fi
             cd -
         EOS
     end
 
+    desc 'Create a standalone Windows .app'
+    task :dist => [:get_love, :compile] do
+        sh <<-EOS
+            LOVE_DIR='#{lovedir :win}'
+            BUILD_DIR='#{builddir}'
+            DIST_DIR='#{distdir :win}'
+            OUTPUT_DIR=$DIST_DIR/#{versioned_name}
+
+            rm -rf "./$OUTPUT_DIR"
+            mkdir -p "$OUTPUT_DIR"
+            cat "$LOVE_DIR/love.exe" "$BUILD_DIR/#{lovefile}" > "./$OUTPUT_DIR/#{exefile}"
+            cp "$LOVE_DIR"/*.dll "./$OUTPUT_DIR/"
+        EOS
+    end
+
     desc 'Create a zipped standalone Windows .exe'
-    task :win => [:dist] do
+    task :zip => [:dist] do
         sh <<-EOS
             NAME=#{versioned_name}
             OUTPUT=$NAME-win.zip
 
-            cd #{builddir}
+            cd #{distdir :win}
             rm -f $OUTPUT
             zip -r $OUTPUT $NAME
             cd -
