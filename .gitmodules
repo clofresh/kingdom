@@ -3,4 +3,4 @@
 	url = git://github.com/Kadoba/Advanced-Tiled-Loader.git
 [submodule "lib/hump"]
 	path = lib/hump
-	url = git://github.com/vrld/hump.git
+	url = git://github.com/clofresh/hump.git
