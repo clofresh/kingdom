@@ -18,6 +18,7 @@ function Battle:enter(prevState, leftArmy, rightArmy, nextState)
         troop.sx = -1/4
         troop.sy = 1/4
         troop.pos = vector(x, y)
+        troop.tactic = advance
         table.insert(leftDeploment, troop)
         y = y + yDelta
     end
@@ -28,6 +29,7 @@ function Battle:enter(prevState, leftArmy, rightArmy, nextState)
         troop.sx = 1/4
         troop.sy = 1/4
         troop.pos = vector(x, y)
+        troop.tactic = halt
         table.insert(rightDeploment, troop)
         y = y + yDelta
     end
@@ -38,33 +40,17 @@ function Battle:enter(prevState, leftArmy, rightArmy, nextState)
     self.rightArmy = rightArmy
     self.nextState = nextState or prevState
     self.winner = nil
+    self.tactic = nil
 end
 
 function Battle:update(dt)
     -- Resolve unit movement
     for i, unit in pairs(self.leftDeploment) do
-        local target = nil
-        local targetDistance = nil
-        for i, foe in pairs(self.rightDeploment) do
-            if target == nil then
-                target = foe
-                targetDistance = (foe.pos - unit.pos):len()
-            else
-                local newTargetDistance = (foe.pos - unit.pos):len()
-                if newTargetDistance < targetDistance then
-                    target = foe
-                    targetDistance = newTargetDistance
-                end
-            end
-        end
-        if target then
-            local move = (target.pos - unit.pos):normalize_inplace() 
-                           * (unit.speed * dt)
-            unit.pos = unit.pos + move
-        end
+        unit:tactic(dt, self.rightDeploment, self.leftDeploment)
         self.index:registerPos(unit)
     end
     for i, unit in pairs(self.rightDeploment) do
+        unit:tactic(dt, self.leftDeploment, self.rightDeploment)
         self.index:registerPos(unit)
     end
 
@@ -113,6 +99,73 @@ function Battle:draw()
     end
     for i, troop in pairs(self.rightDeploment) do
         sprite.draw(troop)
+    end
+end
+
+function advance(unit, dt, enemies, friends)
+    local target = nil
+    local targetDistance = nil
+
+    -- Find the closest enemy
+    for i, foe in pairs(enemies) do
+        if target == nil then
+            target = foe
+            targetDistance = (foe.pos - unit.pos):len()
+        else
+            local newTargetDistance = (foe.pos - unit.pos):len()
+            if newTargetDistance < targetDistance then
+                target = foe
+                targetDistance = newTargetDistance
+            end
+        end
+    end
+    if target then
+        local move = (target.pos - unit.pos):normalize_inplace()
+                       * (unit.speed * dt)
+        unit.pos = unit.pos + move
+    end
+end
+
+function halt(unit, dt, enemies, friends)
+end
+
+function retreat(unit, dt, enemies, friends)
+    local target = nil
+    local targetDistance = nil
+
+    -- Find the closest enemy
+    for i, foe in pairs(enemies) do
+        if target == nil then
+            target = foe
+            targetDistance = (foe.pos - unit.pos):len()
+        else
+            local newTargetDistance = (foe.pos - unit.pos):len()
+            if newTargetDistance < targetDistance then
+                target = foe
+                targetDistance = newTargetDistance
+            end
+        end
+    end
+    if target then
+        local move = (target.pos - unit.pos):normalize_inplace()
+                       * (unit.speed * dt)
+        unit.pos = unit.pos - move
+    end
+end
+
+function Battle:keyreleased(key)
+    if key == 'a' then
+        for i, unit in pairs(self.rightDeploment) do
+            unit.tactic = advance
+        end
+    elseif key == 'h' then
+        for i, unit in pairs(self.rightDeploment) do
+            unit.tactic = halt
+        end
+    elseif key == 'r' then
+        for i, unit in pairs(self.rightDeploment) do
+            unit.tactic = retreat
+        end
     end
 end
 
