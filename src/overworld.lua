@@ -32,6 +32,7 @@ function Overworld:init()
                 ox = 256,
                 oy = 0,
                 speed = obj.properties.speed,
+                lastBattle = love.timer.getTime(),
                 troops = troops,
             }
         elseif obj.name == "Player" then
@@ -54,6 +55,7 @@ function Overworld:init()
         sy = 1/8,
         ox = 0,
         oy = 0,
+        lastBattle = love.timer.getTime(),
         troops = {
             {
                 name = army.randomName(),
@@ -82,7 +84,11 @@ Commander: Not much.
 Enemy: Aiight.
 ]]
     enemy.onCollision = function(self, sprites)
-        if not self.greeted then
+        if self.greeted then
+            if love.timer.getTime() - commander.lastBattle > 5 then
+                Gamestate.switch(battle.state, enemy, commander, Overworld)
+            end
+        else
             Gamestate.switch(dialogue.state, "greetings", script, enemy, commander, battle.state, enemy, commander, Overworld)
             self.greeted = true
         end
@@ -95,7 +101,9 @@ function Overworld:enter(prevState, ...)
     audio.play(self.song)
     if prevState == battle.state then
         local winner, loser = unpack({...})
-        loser.defeated = true
+        if loser then
+            loser.defeated = true
+        end
     end
 end
 
