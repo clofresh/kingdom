@@ -4,6 +4,7 @@ Class     = require "lib/hump/class"
 vector    = require "lib/hump/vector"
 
 -- kingdom context modules
+tactics   = require "src/tactics"
 battle    = require "src/battle"
 overworld = require "src/overworld"
 

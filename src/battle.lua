@@ -139,58 +139,7 @@ end
 
 function Battle:unitTactic(unit, dt, enemies, friends)
     local tactic = unit.tactic or 'halt'
-    self[tactic](self, unit, dt, enemies, friends)
-end
-
-function Battle:advance(unit, dt, enemies, friends)
-    local target = nil
-    local targetDistance = nil
-
-    -- Find the closest enemy
-    for i, foe in pairs(enemies) do
-        if target == nil then
-            target = foe
-            targetDistance = (foe.pos - unit.pos):len()
-        else
-            local newTargetDistance = (foe.pos - unit.pos):len()
-            if newTargetDistance < targetDistance then
-                target = foe
-                targetDistance = newTargetDistance
-            end
-        end
-    end
-    if target then
-        local move = (target.pos - unit.pos):normalize_inplace()
-                       * (unit.speed * dt)
-        unit.pos = unit.pos + move
-    end
-end
-
-function Battle:halt(unit, dt, enemies, friends)
-end
-
-function Battle:retreat(unit, dt, enemies, friends)
-    local target = nil
-    local targetDistance = nil
-
-    -- Find the closest enemy
-    for i, foe in pairs(enemies) do
-        if target == nil then
-            target = foe
-            targetDistance = (foe.pos - unit.pos):len()
-        else
-            local newTargetDistance = (foe.pos - unit.pos):len()
-            if newTargetDistance < targetDistance then
-                target = foe
-                targetDistance = newTargetDistance
-            end
-        end
-    end
-    if target then
-        local move = (target.pos - unit.pos):normalize_inplace()
-                       * (unit.speed * dt)
-        unit.pos = unit.pos - move
-    end
+    return tactics[tactic](self, unit, dt, enemies, friends)
 end
 
 function Battle:keyreleased(key)
