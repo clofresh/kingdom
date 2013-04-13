@@ -7,7 +7,7 @@ local defaultOptions = {
                 name = "New Guy",
                 image = images.loaded.commander,
                 speed = 25,
-                health = 5,
+                health = 100,
             })
             Gamestate.switch(menu.nextState, selected)
         end

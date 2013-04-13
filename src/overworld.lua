@@ -20,7 +20,7 @@ function Overworld:init()
                     name = army.randomName(),
                     image = images.loaded[obj.properties.image],
                     speed = 20,
-                    health = 10,
+                    health = 100,
                 })
             end
             enemy = {
@@ -61,19 +61,19 @@ function Overworld:init()
                 name = army.randomName(),
                 image = images.loaded.commander,
                 speed = 20,
-                health = 10,
+                health = 100,
             },
             {
                 name = army.randomName(),
                 image = images.loaded.commander,
                 speed = 20,
-                health = 10,
+                health = 100,
             },
             {
                 name = army.randomName(),
                 image = images.loaded.commander,
                 speed = 20,
-                health = 10,
+                health = 100,
             },
         },
     }
