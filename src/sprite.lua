@@ -44,16 +44,16 @@ end
 
 function SpatialIndex:inBounds()
     for x, ys in pairs(self._positions) do
-        if x ~= 0 then
-            return false
+        if x == 0 then
+            return true
         end
         for y, sprites in pairs(ys) do
-            if y ~= 0 then
-                return false
+            if y == 0 then
+                return true
             end
         end
     end
-    return true
+    return false
 end
 
 function SpatialIndex:clear()
