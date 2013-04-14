@@ -20,3 +20,21 @@ To run the game, make sure Löve is installed and `love` is in your PATH, then j
 ## Design
 
 [Design doc](https://docs.google.com/document/d/1T7Q46gwFaszmF_SlOxIIxRMw4OTJ0CDKVcL9Ql5Re5g/edit)
+
+## Code
+
+### Directory structure
+
+* audio: song and sound effect assets
+* build: working directory for building and packaging distribution files
+* dialogue: text files for all the dialogue
+* etc: misc. config files
+* lib: third-party Lua libraries
+* maps: Lua modules for defining the interactives for each map
+* names: text files containing character names
+* rake: Ruby Rake modules defining the build tasks
+* sources: source asset files not directly used in the game. Doesn't get bundled with builds
+* src: core game Lua modules
+* tmx: tiled .tmx files defining map layouts
+* tmx/tilesets: tilesets used by the .tmx files
+* units: images for each unit
