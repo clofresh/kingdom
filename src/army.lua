@@ -13,7 +13,7 @@ local Infantry = Class{function(self, name, image)
     self.name = name or randomName()
     self.image = image or images.loaded.commander
     self.speed = 20
-    self.health = 100
+    self.health = 1
 end}
 
 function loadPlayer(name)

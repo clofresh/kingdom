@@ -85,7 +85,9 @@ function Map:collide(collider, collidee, others)
     elseif collidee == self.player and collider.troops
     and love.timer.getTime() - collidee.lastBattle > 5
     and not collider.defeated and not collidee.defeated then
-        Gamestate.switch(battle.state, collider, collidee, Overworld)
+        Gamestate.switch(
+            battle.state, battle.Battle(collider, collidee),
+            Overworld)
     end
 end
 
@@ -103,17 +105,10 @@ end
 
 local Overworld = {name='overview'}
 
-function Overworld:enter(prevState, ...)
+function Overworld:enter(prevState, stateInfo)
     print(string.format("Transitioning from %s to %s",
         prevState.name or "nil", self.name))
     audio.play(self.map.song)
-    if prevState == battle.state then
-        local winner, loser = unpack({...})
-        if loser then
-            print(string.format("Marking %s as the loser", loser.name))
-            loser.defeated = true
-        end
-    end
 end
 
 function Overworld:update(dt)

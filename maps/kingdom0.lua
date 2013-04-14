@@ -13,11 +13,16 @@ function Kingdom0:collide(collider, collidee, others)
     if collider.name == 'Madrugadao' and collidee == self.player then
         if collider.greeted then
             if love.timer.getTime() - self.player.lastBattle > 5 then
-                Gamestate.switch(battle.state, collider, collidee, overworld.state)
+                Gamestate.switch(
+                    battle.state, battle.Battle(collider, collidee),
+                    overworld.state)
             end
         else
             local hello = dialogue.Dialogue("hello_world", collider, collidee)
-            Gamestate.switch(dialogue.state, hello, battle.state, collider, collidee, overworld.state)
+            Gamestate.switch(
+                dialogue.state, hello,
+                battle.state, battle.Battle(collider, collidee),
+                overworld.state)
             collider.greeted = true
         end
     elseif collidee.name == 'Madrugadao' and collider == self.player then

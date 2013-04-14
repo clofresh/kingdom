@@ -1,11 +1,41 @@
 local battleCount = 0
-local Battle = {name='battle'}
+local BattleState = {name='battle'}
 
-function Battle:enter(prevState, leftArmy, rightArmy, nextState)
+local Battle = Class{function(self, leftArmy, rightArmy, name)
+    self.leftArmy = leftArmy
+    self.rightArmy = rightArmy
+    self.name = name
+    self.winner = nil
+    self.loser = nil
+end}
+
+function Battle:touchLastBattle(timestamp)
+    local timestamp = timestamp or love.timer.getTime()
+    self.rightArmy.lastBattle = timestamp
+    self.leftArmy.lastBattle = timestamp
+end
+
+function Battle:formatResult()
+    if self.winner and self.loser then
+        return self.winner.name .. " defeated " .. self.loser.name
+              .. " in " .. self.name
+    elseif self.winner then
+        return self.loser.name .. " retreated from " .. self.name
+    else
+        return self.name .. " ended"
+    end
+end
+
+function BattleState:enter(prevState, battle, nextState)
     print(string.format("Transitioning from %s to %s",
         prevState.name or "nil", self.name))
-
+    self.battle = battle
+    local leftArmy = battle.leftArmy
+    local rightArmy = battle.rightArmy
     battleCount = battleCount + 1
+    if not battle.name then
+        battle.name = 'battle ' .. battleCount
+    end
     audio.play(audio.songs.theme2)
     self.round = 1
     self.index = sprite.SpatialIndex(32, 32)
@@ -26,7 +56,7 @@ function Battle:enter(prevState, leftArmy, rightArmy, nextState)
     y = 10
     yDelta = 100
     local team = 'left'
-    for i, troop in pairs(leftArmy.troops) do
+    for i, troop in pairs(self.battle.leftArmy.troops) do
         troop.sx = -1/4
         troop.sy = 1/4
         troop.pos = vector(x, y)
@@ -44,7 +74,7 @@ function Battle:enter(prevState, leftArmy, rightArmy, nextState)
     x = x + xDelta
     y = 10
     team = 'right'
-    for i, troop in pairs(rightArmy.troops) do
+    for i, troop in pairs(self.battle.rightArmy.troops) do
         troop.sx = 1/4
         troop.sy = 1/4
         troop.pos = vector(x, y)
@@ -61,14 +91,12 @@ function Battle:enter(prevState, leftArmy, rightArmy, nextState)
     self.units = units
     self.active = active
     self.teams = teams
-    self.leftArmy = leftArmy
-    self.rightArmy = rightArmy
     self.nextState = nextState or prevState
     self.winner = nil
     self.tactic = nil
 end
 
-function Battle:update(dt)
+function BattleState:update(dt)
     -- Clear out defeated units
     local stillActive = {}
     local teamCounts = {left=0, right=0}
@@ -118,36 +146,42 @@ function Battle:update(dt)
     self.index:clear()
 
     -- Check for winning conditions
+    local exiting = false
     if teamCounts.right == 0 then
-        print(self.leftArmy.name .. " defeated " .. self.rightArmy.name
-              .. " in battle " .. battleCount)
-        Gamestate.switch(self.nextState, self.leftArmy, self.rightArmy)
+        self.battle.winner = self.battle.leftArmy
+        self.battle.loser = self.battle.rightArmy
+        exiting = true
     elseif teamCounts.left == 0 then
-        print(self.rightArmy.name .. " defeated " .. self.leftArmy.name
-              .. " in battle " .. battleCount)
-        Gamestate.switch(self.nextState, self.rightArmy, self.leftArmy)
+        self.battle.winner = self.battle.rightArmy
+        self.battle.loser = self.battle.leftArmy
+        exiting = true
     elseif not self.onScreen.left:inBounds() then
-        print(self.leftArmy.name .. " retreated from " .. self.rightArmy.name
-              .. " in battle " .. battleCount)
-        Gamestate.switch(self.nextState, self.rightArmy, nil)
+        self.battle.winner = self.battle.rightArmy
+        self.battle.loser = nil
+        exiting = true
     elseif not self.onScreen.right:inBounds() then
-        print(self.rightArmy.name .. " retreated from " .. self.leftArmy.name
-              .. " in battle " .. battleCount)
-        Gamestate.switch(self.nextState, self.leftArmy, nil)
+        self.battle.winner = self.battle.leftArmy
+        self.battle.loser = nil
+        exiting = true
     end
-
+    if exiting then
+        Gamestate.switch(self.nextState, self.battle)
+    end
     self.onScreen.left:clear()
     self.onScreen.right:clear()
     self.active = stillActive
     self.round = self.round + 1
 end
 
-function Battle:leave()
-    self.rightArmy.lastBattle = love.timer.getTime()
-    self.leftArmy.lastBattle = love.timer.getTime()
+function BattleState:leave()
+    print(self.battle:formatResult())
+    self.battle:touchLastBattle()
+    if self.battle.loser then
+        self.battle.loser.defeated = true
+    end
 end
 
-function Battle:draw()
+function BattleState:draw()
     love.graphics.setColor(255, 255, 255)
     love.graphics.rectangle("fill", 0, 0, 640, 480)
     for i, index in pairs(self.active) do
@@ -155,12 +189,12 @@ function Battle:draw()
     end
 end
 
-function Battle:unitTactic(unit, dt)
+function BattleState:unitTactic(unit, dt)
     local tactic = unit.tactic or 'halt'
     return tactics[tactic](self, unit, dt)
 end
 
-function Battle:unitAttack(unit, dt)
+function BattleState:unitAttack(unit, dt)
     local target, targetDistanceVec = self:findClosestEnemy(unit)
     if target and targetDistanceVec:len() < 5 and math.random() > 0.5 then
         local damage = 1
@@ -170,7 +204,7 @@ function Battle:unitAttack(unit, dt)
     return
 end
 
-function Battle:keyreleased(key)
+function BattleState:keyreleased(key)
     if key == 'a' then
         for i, index in pairs(self.teams.right) do
             self.units[index].tactic = 'advance'
@@ -186,7 +220,7 @@ function Battle:keyreleased(key)
     end
 end
 
-function Battle:findClosestEnemy(unit)
+function BattleState:findClosestEnemy(unit)
     local target, targetDistance, targetDistanceVec
     local newTargetDistance, newTargetDistanceVec
     local enemies, enemy
@@ -211,5 +245,6 @@ end
 
 
 return {
-    state = Battle,
+    state = BattleState,
+    Battle = Battle,
 }
