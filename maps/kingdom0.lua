@@ -1,5 +1,6 @@
 local Kingdom0 = Class{__includes=overworld.Map, init=function(self, player)
     overworld.Map.init(self, player, "kingdom0.tmx", audio.songs.theme1)
+    self:addCollisionDetector(collide)
 end}
 
 function Kingdom0:updateEnemy(dt, enemy)
@@ -9,25 +10,23 @@ function Kingdom0:updateEnemy(dt, enemy)
     end
 end
 
-function Kingdom0:collide(collider, collidee, others)
+function collide(collider, collidee)
     if collider.name == 'Madrugadao' and collidee == self.player then
-        if collider.greeted then
-            if love.timer.getTime() - self.player.lastBattle > 5 then
-                Gamestate.switch(
-                    battle.state, battle.Battle(collider, collidee),
-                    overworld.state)
-            end
+        local madrugadao = collider
+        local player = collidee
+        if madrugadao.greeted then
+            return battle.collide(collider, collidee)
         else
-            local hello = dialogue.Dialogue("hello_world", collider, collidee)
+            local hello = dialogue.Dialogue("hello_world", madrugadao, player)
             Gamestate.switch(
                 dialogue.state, hello,
-                battle.state, battle.Battle(collider, collidee),
+                battle.state, battle.Battle(madrugadao, player),
                 overworld.state)
-            collider.greeted = true
+            madrugadao.greeted = true
+            return true
         end
-    elseif collidee.name == 'Madrugadao' and collider == self.player then
     else
-        overworld.Map.collide(self, collider, collidee, others)
+        return false
     end
 end
 

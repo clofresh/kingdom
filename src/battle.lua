@@ -243,8 +243,25 @@ function BattleState:findClosestEnemy(unit)
     return target, targetDistanceVec
 end
 
+function collide(collider, collidee)
+    if collidee.type == 'player' and collider.troops then
+        local player, enemy
+        player = collidee
+        enemy = collider
+        if love.timer.getTime() - player.lastBattle > 5
+        and not player.defeated and not enemy.defeated then
+            Gamestate.switch(BattleState, Battle(enemy, player), Overworld)
+            return true
+        else
+            return false
+        end
+    else
+        return false
+    end
+end
 
 return {
     state = BattleState,
     Battle = Battle,
+    collide = collide,
 }

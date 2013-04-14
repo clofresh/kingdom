@@ -11,6 +11,7 @@ local Map = Class{function(self, player, name, song)
     player.pos = vector(playerStart.x, playerStart.y)
     self.player = player
     self.towns = town.fromTmx(self.map('towns'))
+    self.collisionDetectors = {town.collide, battle.collide}
 end}
 
 function Map:update(dt)
@@ -20,18 +21,9 @@ function Map:update(dt)
     self:updatePlayer(dt)
     self:updateEnemies(dt)
     self.index:checkCollisions(dt, function(dt, sprites)
-        for i, sprt in pairs(sprites) do
-            local other
-            for i, collider in pairs(sprites) do
-                if sprt ~= collider then
-                    other = collider
-                    break
-                end
-            end
-            if other and self.collide then
-                self:collide(sprt, other, sprites)
-            end
-        end
+        -- For now, assume that collisions only occur between 2 sprites
+        local collider, collidee = unpack(sprites)
+        self:collide(collider, collidee)
     end)
     self.index:clear()
 end
@@ -75,21 +67,21 @@ function Map:updateEnemies(dt)
 end
 
 function Map:collide(collider, collidee, others)
-    if collider == self.player and collidee.type == 'town' then
-        local player = collider
-        local twn = collidee
-        if not player.inTown then
-            player.inTown = true
-            twn.activator = player
-            Gamestate.switch(menu.state, twn)
+    local collided = false
+    for i, func in pairs(self.collisionDetectors) do
+        collided = func(collider, collidee)
+        if collided then
+            break
         end
-    elseif collidee == self.player and collider.troops
-    and love.timer.getTime() - collidee.lastBattle > 5
-    and not collider.defeated and not collidee.defeated then
-        Gamestate.switch(
-            battle.state, battle.Battle(collider, collidee),
-            Overworld)
+        collided = func(collidee, collider)
+        if collided then
+            break
+        end
     end
+end
+
+function Map:addCollisionDetector(collisionDetector)
+    table.insert(self.collisionDetectors, collisionDetector)
 end
 
 function Map:draw()

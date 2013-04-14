@@ -24,7 +24,24 @@ function fromTmx(townLayer)
     return towns
 end
 
+function collide(collider, collidee)
+    local collided = false
+    if collider.type == 'player' and collidee.type == 'town' then
+        local player = collider
+        local town = collidee
+        if not player.inTown then
+            player.inTown = true
+            town.activator = player
+            Gamestate.switch(menu.state, town)
+        end
+        collided = true
+    end
+
+    return collided
+end
+
 return {
     fromTmx = fromTmx,
     Town = Town,
+    collide = collide,
 }

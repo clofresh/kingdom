@@ -23,6 +23,7 @@ function loadPlayer(name)
     player.ox = 0
     player.oy = 0
     player.lastBattle = love.timer.getTime()
+    player.type = 'player'
     for i = 1, 3 do
         player:addTroop(Infantry())
     end
