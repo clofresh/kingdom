@@ -9,11 +9,25 @@ function Commander:addTroop(troop)
     table.insert(self.troops, troop)
 end
 
-local Infantry = Class{function(self, name, image)
+local Unit = Class{function(self, name, image)
     self.name = name or randomName()
     self.image = image or images.loaded.commander
-    self.speed = 20
+    self.speed = 0
     self.health = 1
+end}
+
+local Infantry = Class{__includes=Unit, init=function(self, name, image)
+    local image = image or images.loaded.infantry
+    Unit.init(self, name, image)
+    self.speed = 20
+    self.health = 10
+end}
+
+local Archer = Class{__includes=Unit, init=function(self, name, image)
+    local image = image or images.loaded.archer
+    Unit.init(self, name, image)
+    self.speed = 25
+    self.health = 5
 end}
 
 function loadPlayer(name)
@@ -77,8 +91,9 @@ end
 return {
     loadNames = loadNames,
     randomName = randomName,
-    Commander = Commander,
-    Infantry = Infantry,
     fromTmx = fromTmx,
     loadPlayer = loadPlayer,
+    Commander = Commander,
+    Infantry = Infantry,
+    Archer = Archer,
 }

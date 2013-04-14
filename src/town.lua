@@ -1,7 +1,7 @@
 local defaultOptions = {
     menu.MenuOption("Recruit", function(self, menu)
         print("Recruited")
-        menu.activator:addTroop(army.Infantry())
+        menu.activator:addTroop(army.Archer())
         menu:exit()
     end),
     menu.MenuOption("Exit", function(self, menu)
