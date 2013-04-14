@@ -80,7 +80,8 @@ function Map:collide(collider, collidee, others)
         local twn = collidee
         if not player.inTown then
             player.inTown = true
-            Gamestate.switch(menu.state, player, twn.pos, twn.options)
+            twn.activator = player
+            Gamestate.switch(menu.state, twn)
         end
     elseif collidee == self.player and collider.troops
     and love.timer.getTime() - collidee.lastBattle > 5

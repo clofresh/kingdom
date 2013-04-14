@@ -2,17 +2,15 @@ local defaultOptions = {
     menu.MenuOption("Recruit", function(self, menu)
         print("Recruited")
         menu.activator:addTroop(army.Infantry())
-        Gamestate.switch(menu.nextState, self)
+        menu:exit()
     end),
     menu.MenuOption("Exit", function(self, menu)
-        Gamestate.switch(menu.nextState, self)
+        menu:exit()
     end),
 }
 
-local Town = Class{function(self, name, pos, options)
-    self.name = name
-    self.pos = pos
-    self.options = options or defaultOptions
+local Town = Class{__includes=menu.Menu, init=function(self, ...)
+    menu.Menu.init(self, ...)
     self.type = 'town'
 end}
 
