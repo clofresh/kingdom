@@ -14,27 +14,20 @@ function Overworld:init()
     local playerStart, enemy
     for i, obj in pairs(self.map("armies").objects) do
         if obj.name == "Madrugadao" then
-            local troops = {}
-            while #troops < obj.properties.numTroops do
-                table.insert(troops, {
-                    name = army.randomName(),
-                    image = images.loaded[obj.properties.image],
-                    speed = 20,
-                    health = 100,
-                })
+            enemy = army.Commander(obj.name,
+                images.loaded[obj.properties.image], vector(obj.x, obj.y))
+            enemy.sx = -1/8
+            enemy.sy = 1/8
+            enemy.ox = 256
+            enemy.oy = 0
+            enemy.speed = obj.properties.speed
+            enemy.lastBattle = love.timer.getTime()
+            local numTroops = 0
+            while numTroops < obj.properties.numTroops do
+                enemy:addTroop(army.Infantry())
+                numTroops = numTroops + 1
             end
-            enemy = {
-                name = obj.name,
-                image = images.loaded[obj.properties.image],
-                pos = vector(obj.x, obj.y),
-                sx = -1/8,
-                sy = 1/8,
-                ox = 256,
-                oy = 0,
-                speed = obj.properties.speed,
-                lastBattle = love.timer.getTime(),
-                troops = troops,
-            }
+
         elseif obj.name == "Player" then
             playerStart = obj
         end
@@ -47,36 +40,16 @@ function Overworld:init()
         print("Loaded town: " .. twn.name)
     end
 
-    local commander = {
-        name = "Mormont",
-        image = images.loaded.commander,
-        pos = vector(playerStart.x, playerStart.y),
-        sx = 1/8,
-        sy = 1/8,
-        ox = 0,
-        oy = 0,
-        lastBattle = love.timer.getTime(),
-        troops = {
-            {
-                name = army.randomName(),
-                image = images.loaded.commander,
-                speed = 20,
-                health = 100,
-            },
-            {
-                name = army.randomName(),
-                image = images.loaded.commander,
-                speed = 20,
-                health = 100,
-            },
-            {
-                name = army.randomName(),
-                image = images.loaded.commander,
-                speed = 20,
-                health = 100,
-            },
-        },
-    }
+    local commander = army.Commander("Mormont", images.loaded.commander,
+        vector(playerStart.x, playerStart.y))
+    commander.sx = 1/8
+    commander.sy = 1/8
+    commander.ox = 0
+    commander.oy = 0
+    commander.lastBattle = love.timer.getTime()
+    commander:addTroop(army.Infantry())
+    commander:addTroop(army.Infantry())
+    commander:addTroop(army.Infantry())
 
     local script = [[Commander: Ahoy there!
 Enemy: Sup!
