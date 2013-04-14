@@ -1,5 +1,5 @@
 local ATL = require("lib/Advanced-Tiled-Loader").Loader
-ATL.path = "maps/"
+ATL.path = "tmx/"
 
 local Map = Class{function(self, player, name, song)
     self.map = ATL.load(name)
