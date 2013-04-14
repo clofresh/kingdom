@@ -16,6 +16,44 @@ local Infantry = Class{function(self, name, image)
     self.health = 100
 end}
 
+function loadPlayer(name)
+    local player = Commander(name, images.loaded.commander)
+    player.sx = 1/8
+    player.sy = 1/8
+    player.ox = 0
+    player.oy = 0
+    player.lastBattle = love.timer.getTime()
+    for i = 1, 3 do
+        player:addTroop(Infantry())
+    end
+    return player
+end
+
+function fromTmx(armyLayer)
+    local playerStart
+    local enemies = {}
+    for i, obj in pairs(armyLayer.objects) do
+        if obj.type == "Commander" then
+            local enemy = Commander(obj.name,
+                images.loaded[obj.properties.image], vector(obj.x, obj.y))
+            enemy.sx = -1/8
+            enemy.sy = 1/8
+            enemy.ox = 256
+            enemy.oy = 0
+            enemy.speed = obj.properties.speed
+            enemy.lastBattle = love.timer.getTime()
+            for i = 1, obj.properties.numTroops do
+                enemy:addTroop(Infantry())
+            end
+            enemies[enemy.name] = enemy
+        elseif obj.type == "PlayerStart" then
+            playerStart = obj
+        end
+    end
+    assert(playerStart)
+    return enemies, playerStart
+end
+
 local names = {}
 
 function loadNames(filename)
@@ -40,4 +78,6 @@ return {
     randomName = randomName,
     Commander = Commander,
     Infantry = Infantry,
+    fromTmx = fromTmx,
+    loadPlayer = loadPlayer,
 }

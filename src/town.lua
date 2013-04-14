@@ -35,8 +35,14 @@ function Town:onCollision(sprites)
     end
 end
 
-function fromTmx(obj)
-    return Town(obj.name, vector(obj.x, obj.y), defaultOptions)
+function fromTmx(townLayer)
+    local towns = {}
+    for i, obj in pairs(townLayer.objects) do
+        local twn = Town(obj.name, vector(obj.x, obj.y), defaultOptions)
+        table.insert(towns, twn)
+        print("Loaded town: " .. twn.name)
+    end
+    return towns
 end
 
 return {
