@@ -1,4 +1,4 @@
-local Menu = {}
+local Menu = {name='menu'}
 
 function Menu:enter(prevState, activator, pos, options, selectedIndex,
                     nextState)
@@ -17,7 +17,7 @@ function Menu:keyreleased(key)
     elseif key == "s" then
         self:selectNext()
     elseif key == "return" then
-        self:execute(self.selectedIndex, activator)
+        self:execute(self.selectedIndex, self.activator)
     end
 end
 

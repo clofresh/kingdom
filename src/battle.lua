@@ -1,5 +1,5 @@
 local battleCount = 0
-local Battle = {}
+local Battle = {name='battle'}
 
 function Battle:enter(prevState, leftArmy, rightArmy, nextState)
     battleCount = battleCount + 1

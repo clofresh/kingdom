@@ -21,6 +21,7 @@ function Kingdom0:collide(collider, collidee, others)
                 Overworld)
             collider.greeted = true
         end
+    elseif collidee.name == 'Madrugadao' and collider == self.player then
     else
         overworld.Map.collide(self, collider, collidee, others)
     end

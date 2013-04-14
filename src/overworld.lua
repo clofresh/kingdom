@@ -22,9 +22,9 @@ function Map:update(dt)
     self.index:checkCollisions(dt, function(dt, sprites)
         for i, sprt in pairs(sprites) do
             local other
-            for i, sprt in pairs(sprites) do
+            for i, collider in pairs(sprites) do
                 if sprt ~= collider then
-                    other = sprt
+                    other = collider
                     break
                 end
             end
@@ -75,8 +75,19 @@ function Map:updateEnemies(dt)
 end
 
 function Map:collide(collider, collidee, others)
-    if love.timer.getTime() - collidee.lastBattle > 5 then
+    if collider == self.player and collidee.type == 'town' then
+        local player = collider
+        local twn = collidee
+        if not player.inTown then
+            player.inTown = true
+            Gamestate.switch(menu.state, player, twn.pos, twn.options)
+        end
+    elseif collider == self.player and collidee.troops
+    and love.timer.getTime() - collider.lastBattle > 5 then
         Gamestate.switch(battle.state, collider, collidee, Overworld)
+    elseif collidee == self.player and collider.troops
+    and love.timer.getTime() - collidee.lastBattle > 5 then
+        Gamestate.switch(battle.state, collidee, collider, Overworld)
     end
 end
 
@@ -92,7 +103,7 @@ function Map:draw()
     end
 end
 
-local Overworld = {}
+local Overworld = {name='overview'}
 
 function Overworld:enter(prevState, ...)
     audio.play(self.map.song)

@@ -3,12 +3,7 @@ local defaultOptions = {
         name = "Recruit",
         execute = function(menu)
             print("Recruited")
-            table.insert(menu.activator.troops, {
-                name = "New Guy",
-                image = images.loaded.commander,
-                speed = 25,
-                health = 100,
-            })
+            menu.activator:addTroop(army.Infantry())
             Gamestate.switch(menu.nextState, selected)
         end
     },
@@ -24,23 +19,15 @@ local Town = Class{function(self, name, pos, options)
     self.name = name
     self.pos = pos
     self.options = options or defaultOptions
+    self.type = 'town'
 end}
-
-function Town:onCollision(sprites)
-    for i, spr in pairs(sprites) do
-        if spr ~= self and not spr.inTown then
-            spr.inTown = true
-            Gamestate.switch(menu.state, spr, self.pos, self.options)
-        end
-    end
-end
 
 function fromTmx(townLayer)
     local towns = {}
     for i, obj in pairs(townLayer.objects) do
         local twn = Town(obj.name, vector(obj.x, obj.y), defaultOptions)
         table.insert(towns, twn)
-        print("Loaded town: " .. twn.name)
+        print(string.format("Loaded town %s at %s", twn.name, tostring(twn.pos)))
     end
     return towns
 end
