@@ -112,14 +112,21 @@
 </data>
  </layer>
  <objectgroup name="armies" width="40" height="30">
-  <object name="Madrugadao" x="176" y="176" width="16" height="16">
+  <object name="Madrugadao" type="Commander" x="176" y="176" width="16" height="16">
    <properties>
     <property name="image" value="commander"/>
     <property name="numTroops" value="3"/>
     <property name="speed" value="20"/>
    </properties>
   </object>
-  <object name="Player" x="464" y="272" width="16" height="16"/>
+  <object name="Player" type="PlayerStart" x="464" y="272" width="16" height="16"/>
+  <object name="Billy" type="Commander" x="176" y="240" width="16" height="16">
+   <properties>
+    <property name="image" value="commander"/>
+    <property name="numTroops" value="6"/>
+    <property name="speed" value="20"/>
+   </properties>
+  </object>
  </objectgroup>
  <objectgroup name="towns" width="40" height="30">
   <object name="sirroc" x="448" y="288" width="48" height="48"/>

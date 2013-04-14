@@ -11,10 +11,11 @@ function Overworld:init()
     self.index = sprite.SpatialIndex(32, 32)
     self.towns = {}
 
-    local playerStart, enemy
+    local playerStart
+    local enemies = {}
     for i, obj in pairs(self.map("armies").objects) do
-        if obj.name == "Madrugadao" then
-            enemy = army.Commander(obj.name,
+        if obj.type == "Commander" then
+            local enemy = army.Commander(obj.name,
                 images.loaded[obj.properties.image], vector(obj.x, obj.y))
             enemy.sx = -1/8
             enemy.sy = 1/8
@@ -25,8 +26,8 @@ function Overworld:init()
             for i = 1, obj.properties.numTroops do
                 enemy:addTroop(army.Infantry())
             end
-
-        elseif obj.name == "Player" then
+            enemies[enemy.name] = enemy
+        elseif obj.type == "PlayerStart" then
             playerStart = obj
         end
     end
@@ -54,18 +55,28 @@ Enemy: Sup!
 Commander: Not much.
 Enemy: Aiight.
 ]]
-    enemy.onCollision = function(self, sprites)
-        if self.greeted then
-            if love.timer.getTime() - commander.lastBattle > 5 then
-                Gamestate.switch(battle.state, enemy, commander, Overworld)
+    for name, enemy in pairs(enemies) do
+        if name == 'Madrugadao' then
+            enemy.onCollision = function(self, sprites)
+                if self.greeted then
+                    if love.timer.getTime() - commander.lastBattle > 5 then
+                        Gamestate.switch(battle.state, self, commander, Overworld)
+                    end
+                else
+                    Gamestate.switch(dialogue.state, "greetings", script, self, commander, battle.state, self, commander, Overworld)
+                    self.greeted = true
+                end
             end
         else
-            Gamestate.switch(dialogue.state, "greetings", script, enemy, commander, battle.state, enemy, commander, Overworld)
-            self.greeted = true
+            enemy.onCollision = function(self, sprites)
+                if love.timer.getTime() - commander.lastBattle > 5 then
+                    Gamestate.switch(battle.state, self, commander, Overworld)
+                end
+            end
         end
     end
     self.commander = commander
-    self.enemy = enemy
+    self.enemies = enemies
 end
 
 function Overworld:enter(prevState, ...)
@@ -122,13 +133,12 @@ function Overworld:updatePlayer(dt)
 end
 
 function Overworld:updateEnemy(dt)
-    if not self.enemy.defeated then
-        -- Move towards the player
-        if self.commander then
-            local dir = (self.commander.pos - self.enemy.pos):normalized()
-            self.enemy.pos = self.enemy.pos + (dir * dt * self.enemy.speed)
+    for name, enemy in pairs(self.enemies) do
+        if name == 'Madrugadao' and not enemy.defeated and self.commander then
+            local dir = (self.commander.pos - enemy.pos):normalized()
+            enemy.pos = enemy.pos + (dir * dt * enemy.speed)
         end
-        self.index:registerPos(self.enemy)
+        self.index:registerPos(enemy)
     end
 end
 
@@ -141,8 +151,10 @@ function Overworld:draw()
         xPos = self.commander.pos.x
         yPos = self.commander.pos.y
     end
-    if not self.enemy.defeated then
-        sprite.draw(self.enemy)
+    for name, enemy in pairs(self.enemies) do
+        if not enemy.defeated then
+            sprite.draw(enemy)
+        end
     end
 
     love.graphics.print(string.format(
