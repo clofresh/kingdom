@@ -11,7 +11,7 @@ function Kingdom0:updateEnemy(dt, enemy)
 end
 
 function collide(collider, collidee)
-    if collider.name == 'Madrugadao' and collidee == self.player then
+    if collider.name == 'Madrugadao' and collidee.type == 'player' then
         local madrugadao = collider
         local player = collidee
         if madrugadao.greeted then
