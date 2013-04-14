@@ -24,13 +24,15 @@ function lineIterator(text)
     return text:gmatch('(.-)\n()')
 end
 
-local Dialogue = {}
+local Dialogue = {name='dialogue'}
 
 function loadDialogue(name)
     return love.filesystem.read("dialogue/"..name..".txt")
 end
 
 function Dialogue:enter(prevState, name, left, right, nextState, ...)
+    print(string.format("Transitioning from %s to %s",
+        prevState.name or "nil", self.name))
     audio.stop()
     local script = loadDialogue(name)
     self.script = lineIterator(script)

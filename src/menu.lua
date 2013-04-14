@@ -2,6 +2,9 @@ local Menu = {name='menu'}
 
 function Menu:enter(prevState, activator, pos, options, selectedIndex,
                     nextState)
+    print(string.format("Transitioning from %s to %s",
+        prevState.name or "nil", self.name))
+
     self.activator = activator
     self.pos = pos
     self.options = options

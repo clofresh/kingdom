@@ -2,6 +2,9 @@ local battleCount = 0
 local Battle = {name='battle'}
 
 function Battle:enter(prevState, leftArmy, rightArmy, nextState)
+    print(string.format("Transitioning from %s to %s",
+        prevState.name or "nil", self.name))
+
     battleCount = battleCount + 1
     audio.play(audio.songs.theme2)
     self.round = 1
