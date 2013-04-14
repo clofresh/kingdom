@@ -20,36 +20,17 @@ function drawPortrait(sprite, portrait)
     love.graphics.setStencil()
 end
 
-function lineIterator(text)
-    return text:gmatch('(.-)\n()')
-end
-
-local Dialogue = {name='dialogue'}
-
-function loadDialogue(name)
-    return love.filesystem.read("dialogue/"..name..".txt")
-end
-
-function Dialogue:enter(prevState, name, left, right, nextState, ...)
-    print(string.format("Transitioning from %s to %s",
-        prevState.name or "nil", self.name))
-    audio.stop()
-    local script = loadDialogue(name)
-    self.script = lineIterator(script)
+local Dialogue = Class{function(self, name, left, right)
+    self.name = name
+    self.script = loadDialogue(name)
     self.left = left
     self.right = right
-    self.nextState = nextState or prevState
-    self.nextStateArgs = {...}
     self.currentLine = self.script()
-end
+end}
 
-function Dialogue:keyreleased(key)
-    if key == "return" then
-        self.currentLine = self.script()
-        if not self.currentLine then
-            Gamestate.switch(self.nextState, unpack(self.nextStateArgs))
-        end
-    end
+function Dialogue:advance()
+    self.currentLine = self.script()
+    return self.currentLine
 end
 
 function Dialogue:draw()
@@ -60,6 +41,35 @@ function Dialogue:draw()
     end
 end
 
+local DialogueState = {name='dialogue'}
+
+function loadDialogue(name)
+    return love.filesystem.read("dialogue/"..name..".txt"):gmatch('(.-)\n()')
+end
+
+function DialogueState:enter(prevState, dialogue, nextState, ...)
+    print(string.format("Transitioning from %s to %s",
+        prevState.name or "nil", self.name))
+    audio.stop()
+    self.dialogue = dialogue
+    self.nextState = nextState or prevState
+    self.nextStateArgs = {...}
+end
+
+function DialogueState:keyreleased(key)
+    if key == "return" then
+        local currentLine = self.dialogue:advance()
+        if not currentLine then
+            Gamestate.switch(self.nextState, unpack(self.nextStateArgs))
+        end
+    end
+end
+
+function DialogueState:draw()
+    self.dialogue:draw()
+end
+
 return {
-    state = Dialogue,
+    state = DialogueState,
+    Dialogue = Dialogue,
 }

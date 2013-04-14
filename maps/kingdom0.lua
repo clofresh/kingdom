@@ -16,9 +16,8 @@ function Kingdom0:collide(collider, collidee, others)
                 Gamestate.switch(battle.state, collider, collidee, overworld.state)
             end
         else
-            Gamestate.switch(dialogue.state, "hello_world",
-                collider, collidee, battle.state, collider, collidee,
-                overworld.state)
+            local hello = dialogue.Dialogue("hello_world", collider, collidee)
+            Gamestate.switch(dialogue.state, hello, battle.state, collider, collidee, overworld.state)
             collider.greeted = true
         end
     elseif collidee.name == 'Madrugadao' and collider == self.player then
