@@ -1,5 +1,10 @@
 local Menu = {name='menu'}
 
+local MenuOption = Class{function(self, name, execute)
+    self.name = name
+    self.execute = execute
+end}
+
 function Menu:enter(prevState, activator, pos, options, selectedIndex,
                     nextState)
     print(string.format("Transitioning from %s to %s",
@@ -27,7 +32,7 @@ end
 function Menu:execute(selectedIndex, activator)
     local selected =  self.options[selectedIndex]
     print("Executing " .. selected.name)
-    selected.execute(self)
+    selected:execute(self)
 end
 
 function Menu:selectPrev()
@@ -70,4 +75,5 @@ end
 
 return {
     state = Menu,
+    MenuOption = MenuOption,
 }
