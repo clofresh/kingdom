@@ -16,11 +16,21 @@ local Unit = Class{function(self, name, image)
     self.health = 1
 end}
 
+function Unit:attack(battle, dt)
+    local target, targetDistanceVec = battle:findClosestEnemy(self)
+    if target and targetDistanceVec:len() < self.range and math.random() > 0.5 then
+        target.health = target.health - self.damage
+        print(string.format("R%d - [%s] %s hits [%s] %s for %d, %d health left", battle.round, self.team, self.name, target.team, target.name, self.damage, target.health))
+    end
+end
+
 local Infantry = Class{__includes=Unit, init=function(self, name, image)
     local image = image or images.loaded.infantry
     Unit.init(self, name, image)
     self.speed = 20
     self.health = 10
+    self.damage = 1
+    self.range = 5
 end}
 
 local Archer = Class{__includes=Unit, init=function(self, name, image)
@@ -28,6 +38,8 @@ local Archer = Class{__includes=Unit, init=function(self, name, image)
     Unit.init(self, name, image)
     self.speed = 25
     self.health = 5
+    self.damage = 1
+    self.range = 100
 end}
 
 function loadPlayer(name)
@@ -38,8 +50,8 @@ function loadPlayer(name)
     player.oy = 0
     player.lastBattle = love.timer.getTime()
     player.type = 'player'
-    for i = 1, 3 do
-        player:addTroop(Infantry())
+    for i = 1, 5 do
+        player:addTroop(Archer())
     end
     return player
 end

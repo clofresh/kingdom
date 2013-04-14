@@ -195,13 +195,7 @@ function BattleState:unitTactic(unit, dt)
 end
 
 function BattleState:unitAttack(unit, dt)
-    local target, targetDistanceVec = self:findClosestEnemy(unit)
-    if target and targetDistanceVec:len() < 5 and math.random() > 0.5 then
-        local damage = 1
-        target.health = target.health - damage
-        print(string.format("R%d - [%s] %s hits [%s] %s for %d, %d health left", self.round, unit.team, unit.name, target.team, target.name, damage, target.health))
-    end
-    return
+    unit:attack(self, dt)
 end
 
 function BattleState:keyreleased(key)
