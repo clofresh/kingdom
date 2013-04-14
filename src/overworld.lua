@@ -22,10 +22,8 @@ function Overworld:init()
             enemy.oy = 0
             enemy.speed = obj.properties.speed
             enemy.lastBattle = love.timer.getTime()
-            local numTroops = 0
-            while numTroops < obj.properties.numTroops do
+            for i = 1, obj.properties.numTroops do
                 enemy:addTroop(army.Infantry())
-                numTroops = numTroops + 1
             end
 
         elseif obj.name == "Player" then
@@ -47,9 +45,9 @@ function Overworld:init()
     commander.ox = 0
     commander.oy = 0
     commander.lastBattle = love.timer.getTime()
-    commander:addTroop(army.Infantry())
-    commander:addTroop(army.Infantry())
-    commander:addTroop(army.Infantry())
+    for i = 1, 3 do
+        commander:addTroop(army.Infantry())
+    end
 
     local script = [[Commander: Ahoy there!
 Enemy: Sup!
