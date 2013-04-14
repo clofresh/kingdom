@@ -26,9 +26,13 @@ end
 
 local Dialogue = {}
 
-function Dialogue:enter(prevState, name, script, left, right, nextState, ...)
+function loadDialogue(name)
+    return love.filesystem.read("dialogue/"..name..".txt")
+end
+
+function Dialogue:enter(prevState, name, left, right, nextState, ...)
     audio.stop()
-    self.scriptText = script
+    local script = loadDialogue(name)
     self.script = lineIterator(script)
     self.left = left
     self.right = right

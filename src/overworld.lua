@@ -50,11 +50,6 @@ function Overworld:init()
         commander:addTroop(army.Infantry())
     end
 
-    local script = [[Commander: Ahoy there!
-Enemy: Sup!
-Commander: Not much.
-Enemy: Aiight.
-]]
     for name, enemy in pairs(enemies) do
         if name == 'Madrugadao' then
             enemy.onCollision = function(self, sprites)
@@ -63,7 +58,9 @@ Enemy: Aiight.
                         Gamestate.switch(battle.state, self, commander, Overworld)
                     end
                 else
-                    Gamestate.switch(dialogue.state, "greetings", script, self, commander, battle.state, self, commander, Overworld)
+                    Gamestate.switch(dialogue.state, "hello_world",
+                        self, commander, battle.state, self, commander,
+                        Overworld)
                     self.greeted = true
                 end
             end

@@ -1,0 +1,4 @@
+Commander: Ahoy there!
+Enemy: Sup!
+Commander: Not much.
+Enemy: Aiight.
