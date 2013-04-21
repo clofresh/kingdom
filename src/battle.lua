@@ -185,7 +185,7 @@ function BattleState:draw()
     love.graphics.setColor(255, 255, 255)
     love.graphics.rectangle("fill", 0, 0, 640, 480)
     for i, index in pairs(self.active) do
-        sprite.draw(self.units[index])
+        self.units[index]:draw()
     end
 end
 

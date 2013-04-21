@@ -16,12 +16,34 @@ local Unit = Class{function(self, name, image)
     self.health = 1
 end}
 
+function Unit:update(dt, battle)
+    local target, targetDistanceVec = battle:findClosestEnemy(self)
+    if targetDistanceVec == nil then
+        self.tactic = 'halt'
+    elseif self.tactic == 'advance' and targetDistanceVec:len() < 10 then
+        self.tactic = 'randomWalk'
+    elseif self.tactic == 'randomWalk' and targetDistanceVec:len() >= 10 then
+        self.tactic = 'advance'
+    end
+
+    local tactic = self.tactic or 'halt'
+    tactics[tactic](battle, self, dt)
+    battle.index:registerPos(self)
+    battle.onScreen[self.team]:registerPos(self)
+    self:attack(battle, dt)
+
+end
+
 function Unit:attack(battle, dt)
     local target, targetDistanceVec = battle:findClosestEnemy(self)
     if target and targetDistanceVec:len() < self.range and math.random() > 0.5 then
         target.health = target.health - self.damage
         print(string.format("R%d - [%s] %s hits [%s] %s for %d, %d health left", battle.round, self.team, self.name, target.team, target.name, self.damage, target.health))
     end
+end
+
+function Unit:draw()
+    sprite.draw(self)
 end
 
 local Infantry = Class{__includes=Unit, init=function(self, name, image)
@@ -39,8 +61,67 @@ local Archer = Class{__includes=Unit, init=function(self, name, image)
     self.speed = 25
     self.health = 5
     self.damage = 1
-    self.range = 100
+    self.range = 500
+    self.attackRecoveryTime = 0.5
+    self.attackCooldown = 0.0
+    self.arrowSpeed = 100
+    self.arrows = {}
 end}
+
+function Archer:attack(battle, dt)
+    -- Can I shoot?
+    if self.attackCooldown == 0 then
+        -- Should I shot?
+        local target, targetDistanceVec = battle:findClosestEnemy(self)
+        if target and targetDistanceVec:len() < self.range then
+            self:shoot(target)
+        end
+    else
+        self.attackCooldown = math.max(0, self.attackCooldown - dt)
+    end
+
+    -- Arrow in flight?
+    local newArrows = {}
+    for i, arrow in pairs(self.arrows) do
+        arrow.pos = arrow.pos + (arrow.velocity * dt)
+        if arrow.dest:dist(arrow.pos) <= 5 then
+            local targets = battle.index:getNeighbors(arrow)
+            if #targets > 0 then
+                local hit = targets[math.random(1, #targets)]
+                hit.health = hit.health - self.damage
+                print(string.format("R%d - [%s] %s hits [%s] %s with an arrow for %d, %d health left", battle.round, self.team, self.name, hit.team, hit.name, self.damage, hit.health))
+            end
+        else
+            table.insert(newArrows, arrow)
+        end
+    end
+    self.arrows = newArrows
+end
+
+function Archer:shoot(target)
+    self.attackCooldown = self.attackCooldown + self.attackRecoveryTime
+    local velocity = (target.pos - self.pos)
+    velocity:normalize_inplace()
+    velocity = velocity * self.arrowSpeed
+    local arrow = {
+        pos = self.pos:clone(),
+        velocity = velocity,
+        dest = target.pos:clone(),
+    }
+    table.insert(self.arrows, arrow)
+end
+
+
+function Archer:draw()
+    sprite.draw(self)
+    for i, arrow in pairs(self.arrows) do
+        -- CAH from SOH CAH TOA
+        local angle = math.acos(arrow.velocity.x / arrow.velocity:len())
+        love.graphics.draw(images.loaded.arrow,
+            arrow.pos.x, arrow.pos.y,
+            angle, 1/4, 1/4)
+    end
+end
 
 function loadPlayer(name)
     local player = Commander(name, images.loaded.commander)
