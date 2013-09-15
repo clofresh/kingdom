@@ -61,8 +61,8 @@ local Archer = Class{__includes=Unit, init=function(self, name, image)
     self.speed = 25
     self.health = 5
     self.damage = 1
-    self.range = 500
-    self.attackRecoveryTime = 0.5
+    self.range = 1500
+    self.attackRecoveryTime = 1
     self.attackCooldown = 0.0
     self.arrowSpeed = 100
     self.arrows = {}
@@ -100,13 +100,15 @@ end
 
 function Archer:shoot(target)
     self.attackCooldown = self.attackCooldown + self.attackRecoveryTime
-    local velocity = (target.pos - self.pos)
+    local origin = vector(self.pos.x + 30, self.pos.y + 49)
+    local dest = vector(target.pos.x + 32, target.pos.y + 32)
+    local velocity = (dest - origin)
     velocity:normalize_inplace()
     velocity = velocity * self.arrowSpeed
     local arrow = {
-        pos = self.pos:clone(),
+        pos = origin,
         velocity = velocity,
-        dest = target.pos:clone(),
+        dest = dest,
     }
     table.insert(self.arrows, arrow)
 end
@@ -116,10 +118,9 @@ function Archer:draw()
     sprite.draw(self)
     for i, arrow in pairs(self.arrows) do
         -- CAH from SOH CAH TOA
-        local angle = math.acos(arrow.velocity.x / arrow.velocity:len())
-        love.graphics.draw(images.loaded.arrow,
-            arrow.pos.x, arrow.pos.y,
-            angle, 1/4, 1/4)
+        local angle = -math.acos(arrow.velocity.x / arrow.velocity:len())
+            love.graphics.draw(images.loaded.arrow,
+                arrow.pos.x, arrow.pos.y, angle)
     end
 end
 
